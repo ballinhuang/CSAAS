@@ -16,7 +16,7 @@ void qsub(string job_data) {
 	
 	in_addr_t server_ip = inet_addr("127.0.0.1");
     in_port_t server_port = atoi("1289");
-    in_addr_t client_ip = inet_addr("127.0.0.2");
+    in_addr_t client_ip = inet_addr("127.0.0.1");
     in_port_t client_port = atoi("1280");
 
     if ((sock_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {

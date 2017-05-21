@@ -5,8 +5,9 @@
 #include <vector>
 #include <map>
 #include <string.h>
+#include <iostream>
 using namespace std;
-/*var_type*/
+
 #define ENV_DATA      1 
 #define CMDLINE_DATA  2 
 #define LOGIC_DATA    3 
@@ -25,34 +26,14 @@ private:
 
 public:
 
-  job_info()
-  {
-      job_attr = map<string,job_data>();
-  }
-  int add_attr(char *name, char *value, int type)
-  {
-    job_data data = job_data(name,value,type);
-    job_attr.insert(pair<string,job_data>(name,data));
-    return 1;
-  }
-  void parsedata(string *parse){
-    *parse += "TYPE = ";
-    switch(data_type) {
-      case QSUB:  *parse += "QSUB"; break;
-      case SCHEDULER:  *parse += "SCHEDULER"; break;
-      default:  break;
-    }
-    *parse += "\n";
+  job_info();
+  int add_attr(char *, char *, int );
 
-    for (map<string,job_data>::iterator it = job_attr.begin(); it != job_attr.end(); it++)
-       *parse = *parse + it->second.name + " = " + it->second.value + "\n";
-  }
-  Data_type getDataType() {
-    return data_type;
-  }
-  void setDataType(Data_type type) {
-    data_type = type;
-  }
+  void parsedata(string *);
+
+  Data_type getDataType();
+  void setDataType(Data_type );
+  
 };
 
 #endif

@@ -1,5 +1,6 @@
 #ifndef _JOB_DATA
 #define _JOB_DATA
+#include <iostream>
 class job_data
   {
 public:
@@ -18,6 +19,4 @@ public:
         value = pVal;
       }
   };
-
-
-  #endif
+#endif
