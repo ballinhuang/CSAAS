@@ -19,4 +19,6 @@ public:
         value = pVal;
       }
   };
-#endif
+
+
+  #endif

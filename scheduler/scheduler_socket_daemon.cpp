@@ -18,8 +18,6 @@ void runJob(char * cmd) {
     
     in_addr_t server_ip = inet_addr("127.0.0.1");
     in_port_t server_port = atoi("1289");
-    in_addr_t client_ip = inet_addr("127.0.0.1");
-    in_port_t client_port = atoi("1280");
 
     if ((sock_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
         cout << "client socket creat error !" << endl;
@@ -28,10 +26,6 @@ void runJob(char * cmd) {
 
     bool flag = true;
     setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, (char *)&flag, sizeof(flag));
-
-    client_addr.sin_addr.s_addr = client_ip;
-    client_addr.sin_family = AF_INET;
-    client_addr.sin_port = htons(client_port);
 
     server_addr.sin_addr.s_addr = server_ip;
     server_addr.sin_family = AF_INET;

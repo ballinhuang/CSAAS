@@ -1,0 +1,3 @@
+server 1289
+scheduler 1290
+client 1280
