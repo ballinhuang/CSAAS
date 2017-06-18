@@ -1,5 +1,4 @@
 #include "job_info.h"
-
 job_info::job_info()
 {
   job_attr = map<string,job_data>();

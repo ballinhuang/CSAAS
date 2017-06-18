@@ -8,6 +8,8 @@
 #include <iostream>
 #include <string>
 #include <cstdio>
+#include <sstream>
+
 using namespace std;
 
 #define ENV_DATA      1 
@@ -25,14 +27,15 @@ class job_info
 private:
   map<string,job_data> job_attr;
   Data_type data_type;
-
+  int jobid;
 public:
 
   job_info();
   int add_attr(char *, char *, int );
-
+  void setjobid(int id);
   void parsedata(string *);
-
+  void readdata(char *message);
+  void parse_job_tomom(string *);
   Data_type getDataType();
   void setDataType(Data_type );
   

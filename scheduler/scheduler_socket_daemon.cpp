@@ -9,7 +9,7 @@
 #include <iostream>
 using namespace std;
 
-#define Port 1290
+#define Port 11301
 #define CmdLen 1000
 
 void runJob(char * cmd) {
@@ -17,7 +17,7 @@ void runJob(char * cmd) {
     struct sockaddr_in client_addr, server_addr;
     
     in_addr_t server_ip = inet_addr("127.0.0.1");
-    in_port_t server_port = atoi("1289");
+    in_port_t server_port = atoi("11300");
 
     if ((sock_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
         cout << "client socket creat error !" << endl;
@@ -36,8 +36,9 @@ void runJob(char * cmd) {
         exit(1);
     }
 
-    char buf[1000];
+    char buf[1000]="";
     strcpy(buf, "TYPE = SCHEDULER\n");
+    strcat(buf, "SUBTYPE = RUNJOB\n");
     write(sock_fd,buf,1000);
 
     close(sock_fd);

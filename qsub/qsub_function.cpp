@@ -19,8 +19,22 @@ int read_env_data(job_info *ji)
 
 int read_script_data(job_info *ji , char *script_name)
 {
-	char *script_type = "Script";
-	ji->add_attr(script_type, script_name, SCRIPT_DATA);
+	FILE *ptr;
+	char buf[1000] = {0};
+	ptr = fopen(script_name, "r");
+	char script_type[100],script_parm[1000]="";
+	if(ptr == NULL) {
+		cout << "IPConfig doesn't exit !" << endl;
+		return 0;
+	}
+	strcpy(script_type,"Script");
+	while(fgets(buf, sizeof(buf), ptr)) {
+		strcat(script_parm,buf);
+		strcat(script_parm,"\n");
+	}
+	strcat(script_parm,"Script\n");
+	ji->add_attr(script_type, script_parm, SCRIPT_DATA);
+	return 1;
 }
 
 string get_job_info(int argc, char **argv,char **envp)

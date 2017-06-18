@@ -15,7 +15,7 @@ void qsub(string job_data) {
 	struct sockaddr_in client_addr, server_addr;
 	
 	in_addr_t server_ip = inet_addr("127.0.0.1");
-    in_port_t server_port = atoi("1299");
+    in_port_t server_port = atoi("11300");
 
     if ((sock_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
         cout << "client socket creat error !" << endl;

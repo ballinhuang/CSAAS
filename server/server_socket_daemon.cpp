@@ -8,6 +8,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <pthread.h>
+#include "job_info.h"
 using namespace std;
 
 #define MaxConnectQuantity 3
@@ -21,18 +22,66 @@ char s_port[10];
 char c_ip[15];
 char c_port[10];
 pthread_mutex_t lock;
+vector<job_info> job_list;
 
 int received_qsub(char *message, int fd) {
 	char fileName[100];
-	sprintf(fileName,"test_output_%02d", ++test_counter);
+	job_info newjob;
+	pthread_mutex_lock(&lock);
+	newjob.setjobid(++test_counter);
+	sprintf(fileName,"test_output_%d", test_counter);
+	pthread_mutex_unlock(&lock);
 	FILE *file_ptr = fopen(fileName, "w");
 	fprintf(file_ptr, "client_sock_fd = %d\n", fd);
 	fprintf(file_ptr, "%s\n", message);
 	fclose(file_ptr);
 	cout << "qsub finished !" << endl;
+	
+	newjob.readdata(message);
+
+	pthread_mutex_lock(&lock);
+	job_list.push_back(newjob);
+	pthread_mutex_unlock(&lock);
+
 	pthread_mutex_lock(&lock);
 	do_scheduler = true;
 	pthread_mutex_unlock(&lock);
+}
+
+void req_runjob(){
+	cout << "connect mom\n";
+	int sock_fd = 0;
+	struct sockaddr_in client_addr, server_addr;
+	
+	in_addr_t server_ip = inet_addr("127.0.0.1");
+	in_port_t server_port = atoi("11302");
+
+    if ((sock_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+        printf("server client socket creat error !");
+        exit(EXIT_FAILURE);
+    }
+
+    bool flag = true;
+    setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, (char *)&flag, sizeof(flag));
+
+    server_addr.sin_addr.s_addr = server_ip;
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(atoi("11302"));
+
+    if(connect(sock_fd, (struct sockaddr *)&server_addr, sizeof(struct sockaddr)) == -1) {
+        printf("server client socket connect error !\n");
+        exit(EXIT_FAILURE);
+    }
+    string strbuf="";
+    pthread_mutex_lock(&lock);
+    job_list[0].parse_job_tomom(&strbuf);
+    job_list.erase (job_list.begin());
+    pthread_mutex_unlock(&lock);
+    char buf[1000];
+    strcpy(buf, strbuf.c_str());
+    write(sock_fd,buf,CmdLen);
+    cout << "write cmd to mom finished\n";
+    close(sock_fd);
 }
 
 void findBufType(int client_fd, char *buf) {
@@ -49,27 +98,32 @@ void findBufType(int client_fd, char *buf) {
 		received_qsub(buf, client_fd);
 	}
 	else if(s == "SCHEDULER")
-		cout << "here run job\n";
+	{
+		type = strstr(buf, "SUBTYPE");
+		for( ; *type != '='; type++);
+		for(++type ; *type == ' '; type++);
+
+		s = "";
+		for( ; *type != '\n' && *type != ' '; type++)
+			s += *type;
+		if (s == "RUNJOB")
+		{
+			req_runjob();
+		}
+	}
 	else
 		cout << "error type\n";	
 }
 
 void *handle_scheduler_contact(void *arg)
 {
-	/*pthread_mutex_lock(&lock);
-    do_scheduler = false;
-    pthread_mutex_unlock(&lock);
-	*/
+
 	cout << "connect scheduler\n";
 	int sock_fd = 0;
 	struct sockaddr_in client_addr, server_addr;
 	
 	in_addr_t server_ip = inet_addr(c_ip);
 	in_port_t server_port = atoi(c_port);
-	/*
-	in_addr_t client_ip = inet_addr(s_ip);
-	in_port_t client_port = atoi(s_port);
-	*/
 
     if ((sock_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
         printf("server client socket creat error !");
@@ -178,7 +232,7 @@ void main_loop() {
 		pthread_mutex_lock(&lock);
 
 		if(do_scheduler) {
-			pthread_mutex_unlock(&lock);
+			//pthread_mutex_unlock(&lock);
 
 			pthread_t threadScheduler;
 			if(pthread_create(&threadScheduler, NULL, &handle_scheduler_contact, NULL) != 0) {
@@ -186,6 +240,7 @@ void main_loop() {
 				exit(EXIT_FAILURE);
 			}
 			do_scheduler = false;
+			pthread_mutex_unlock(&lock);
 		}
 		else
 			pthread_mutex_unlock(&lock);
@@ -241,14 +296,6 @@ void readIPPort() {
 
 int main(int argc, char *argv[]) {
 	readIPPort();
-
-	/*
-	cout << "test: " << atoi(s_port) << endl;
-	cout << s_ip << endl;
-	cout << s_port << endl;
-	cout << c_ip << endl;
-	cout << c_port << endl;
-	*/
 
 	pid_t pid= fork();
 	if(pid == -1) {
