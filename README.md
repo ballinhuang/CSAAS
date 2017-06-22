@@ -1,0 +1,5 @@
+# CSAAS
+
+```bash
+$make all
+```
