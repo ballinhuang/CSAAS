@@ -1,7 +1,6 @@
 #include<iostream>
 #include"job.hpp"
 #include"c_socket.hpp"
-#include"subjob_service.hpp"
 #include <fstream>
 #include <string>
 
@@ -20,9 +19,8 @@ int main(int argc, char **argv){
     
     job newjob;
     newjob.initjob();
-    
-    subjob_service srv;
-    srv.creatjob(&newjob, script_name);
+    newjob.setenv();
+    newjob.parse_script(script_name);
 
     ifstream f("subjob.con");
     string ip,port;

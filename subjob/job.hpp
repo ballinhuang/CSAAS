@@ -10,8 +10,10 @@ class job{
 
     public:
     void initjob();
+    void setenv();
+    void parse_script(std::string);
     std::string encode_job();
-    void addattirbute(std::string,std::string);
+    private:
     json attribute;
 };
 

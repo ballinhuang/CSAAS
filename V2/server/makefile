@@ -2,9 +2,9 @@ CC = g++
 INCLUDE = ../lib
 LIB = -lpthread
 
-all: subjob clean
+all: server clean
 
-subjob: job.o main.o c_socket.o subjob_service.o
+server: Server.o Monitor.o main.o
 	${CC} *.o ${LIB} -I ${INCLUDE} -o $@
 %.o: %.cpp
 	${CC} $^ ${LIB} -I ${INCLUDE} -c
