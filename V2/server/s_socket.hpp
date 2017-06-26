@@ -10,15 +10,16 @@
 class s_socket{
     public:
     void setConnection(std::string,std::string);
-    void acceptClinet();
+    int acceptClinet();
     std::string readmessage();
     void closeConnection();
+    void closebind();
     //void getClientaddr();
-
+    void setacceptreuse();
     private:
     struct sockaddr_in server_addr;
     struct sockaddr_in client_addr;	
-    int sock_fd,client_sock_fd;
+    int sock_fd,conn_port;
 };
 
 #endif

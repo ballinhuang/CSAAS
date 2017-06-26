@@ -26,25 +26,30 @@ void Server::attach_success(){
     cout << "attach success\n";
 }
 
-
-void Server::f(int s){
-	Monitor::GetInstance()->foo(s);
-	std::this_thread::sleep_for(std::chrono::seconds(1));
-	printf("job %d down\n",s);
+void Server::readrequest(s_socket *s){
+    string res;
+    res = s->readmessage();
+    cout << res << endl;
+    s->closeConnection();
 }
 
-void Server::x(int s){
-	Monitor::GetInstance()->zoo(s);
-	std::this_thread::sleep_for(std::chrono::seconds(1));
-	printf("job %d down\n",s);
+void Server::start_accept_thread(string ip, string port, ThreadPool* pool){
+    pool = new ThreadPool(10);
+    while(1){
+        s_socket s;
+        s.setConnection(ip,port);
+        if(s.acceptClinet()){
+            s.setacceptreuse();
+            pool->enqueue(&readrequest,&s);
+        }
+        s.closebind();
+    }
 }
 
 void Server::run(){
-    pool = new ThreadPool(10);
-    s_socket s;
-    s.setConnection(svr_ip,svr_port);
-    s.acceptClinet();
-    string r = s.readmessage();
-    cout << r << endl;
-    s.closeConnection();
+    server_pool = new ThreadPool(2);
+    server_pool->enqueue(start_accept_thread,svr_ip,svr_port,request_pool);
+    while(1){
+
+    }
 }

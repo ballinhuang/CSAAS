@@ -16,11 +16,12 @@ class Server : public Observer{
         void notify();
         void attach_success();
     private:
-        ThreadPool *pool;
+        static void start_accept_thread(std::string,std::string,ThreadPool*);
+        static void readrequest(s_socket*);
+        ThreadPool *request_pool;
+        ThreadPool *server_pool;
         bool do_schedual=false;
         std::string svr_ip,svr_port,sch_ip,sch_port;
-        static void f(int);
-        static void x(int);
         //std::map<std::string,Node>;
 };
 
