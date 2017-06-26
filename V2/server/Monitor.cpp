@@ -1,8 +1,10 @@
 #include "Monitor.hpp"
 #include "iostream"
 #include "cstdio"
+#include <json.hpp>
 
 using namespace std;
+using json = nlohmann::json;
 extern mutex monitor_mtx;
 
 Monitor *Monitor::GetInstance(){
@@ -24,18 +26,16 @@ void Monitor::attachserver(Observer *obs) {
     obs->attach_success();
 }
 
-
-//test
-void Monitor::foo(int s){
-    atx.lock();
-	a.push_back(1);
+void Monitor::notitfynewjob(){
     observer->notify();
-	atx.unlock();
-	printf("job %d call foo.\n",s);
 }
 
-void Monitor::zoo(int s){
-    atx.lock();
-	printf("job %d call zoo : value a= %d\n",s,a.size());
-    atx.unlock();
+void Monitor::addjob(json newjob){
+    jobtex.lock();
+    newjob["JOBID"] = jobcount;
+    jobcount++;
+    cout << newjob.dump();
+    joblist.push_back(newjob);
+    notitfynewjob();
+    jobtex.unlock();
 }

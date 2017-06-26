@@ -1,6 +1,7 @@
 #include "Server.hpp"
 #include <iostream>
-
+#include <json.hpp>
+using json = nlohmann::json;
 using namespace std;
 
 Server::Server(Monitor *m){
@@ -19,6 +20,7 @@ void Server::set_scheduler_attr(string ip, string port){
 }
 
 void Server::notify(){
+    cout << "recuve new job!\n";
     do_schedual = true;
 }
 
@@ -29,8 +31,9 @@ void Server::attach_success(){
 void Server::readrequest(s_socket *s){
     string res;
     res = s->readmessage();
-    cout << res << endl;
     s->closeConnection();
+    json job = json::parse(res);
+    Monitor::GetInstance()->addjob(job);
 }
 
 void Server::start_accept_thread(string ip, string port, ThreadPool* pool){
