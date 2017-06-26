@@ -19,20 +19,20 @@ void Server::set_scheduler_attr(string ip, string port){
 }
 
 void Server::notify(){
-    cout << "Monitor get a job!\n";
+    do_schedual = true;
 }
 
 void Server::attach_success(){
     cout << "attach success\n";
 }
 
-//test
+
 void Server::f(int s){
 	Monitor::GetInstance()->foo(s);
 	std::this_thread::sleep_for(std::chrono::seconds(1));
 	printf("job %d down\n",s);
 }
-//test
+
 void Server::x(int s){
 	Monitor::GetInstance()->zoo(s);
 	std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -40,12 +40,11 @@ void Server::x(int s){
 }
 
 void Server::run(){
-    ThreadPool pool(10);
-    for(int i = 1; i <= 20; ++i) {
-		int arg = i;
-		if(i % 5 != 0)
-		pool.enqueue(&Server::f,arg);
-		else
-		pool.enqueue(&Server::x,arg);
-	}
+    pool = new ThreadPool(10);
+    s_socket s;
+    s.setConnection(svr_ip,svr_port);
+    s.acceptClinet();
+    string r = s.readmessage();
+    cout << r << endl;
+    s.closeConnection();
 }

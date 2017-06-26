@@ -46,9 +46,13 @@ int socket_server(int port)
     }
     cout << "server accept finished !\n";
 
-	char buf[1000];
-    read(client_sock_fd, buf, 1000);
-    printf("%s",buf);
+    string result = "";
+    char buf[100];
+    while(read(client_sock_fd,buf,100)){
+        result += buf;
+        memset(buf, '\0', 100);
+    }
+    cout << result << endl;
     close(client_sock_fd);
     close(sock_fd);
 }
@@ -64,7 +68,7 @@ int main(int argc, char *argv[])
     	cout << "shut down parent !" << endl;
     	return 0;
     }
-    socket_server(5000);
+    socket_server(5001);
 
     return 0;
 }

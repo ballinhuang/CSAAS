@@ -21,7 +21,7 @@ int main(int argc, char **argv){
     string scheduler_ip,scheduler_port;
     f >> scheduler_ip;
     f >> scheduler_port;
-    
+    f.close();
     pid_t pid= fork();
 	if(pid == -1) {
     	cout << "server fork error !" << endl;
