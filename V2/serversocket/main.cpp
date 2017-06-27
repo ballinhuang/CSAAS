@@ -48,7 +48,7 @@ int socket_server(int port)
 
     string result = "";
     char buf[100];
-    while(read(client_sock_fd,buf,100)){
+    while(read(client_sock_fd,buf,99)){
         result += buf;
         memset(buf, '\0', 100);
     }
@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
     	cout << "shut down parent !" << endl;
     	return 0;
     }
-    socket_server(5001);
+    socket_server(5002);
 
     return 0;
 }

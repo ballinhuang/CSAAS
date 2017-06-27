@@ -15,15 +15,17 @@ class Server : public Observer{
         void set_server_attr(std::string,std::string);
         void set_scheduler_attr(std::string,std::string);
         void run();
-        void notify();
+        void notify(int);
         void attach_success();
     private:
+        int contact_scheduler();
         static void start_accept_thread(std::string,std::string,ThreadPool*);
         static void readrequest(s_socket*,HandlerFactory*);
         ThreadPool *request_pool;
         ThreadPool *server_pool;
-        bool do_schedual=false;
-        std::mutex do_schedual_tex;
+        bool do_schedual = false;
+        bool schedual_busy = false;
+        std::mutex do_schedual_tex,schedual_busy_tex;
         std::string svr_ip,svr_port,sch_ip,sch_port;
         //std::map<std::string,Node>;
 };

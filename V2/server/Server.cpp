@@ -1,6 +1,8 @@
 #include "Server.hpp"
 #include <iostream>
 #include <json.hpp>
+#include "c_socket.hpp"
+#include "Message.hpp"
 
 using json = nlohmann::json;
 using namespace std;
@@ -29,14 +31,30 @@ void Server::set_scheduler_attr(string ip, string port){
     sch_port = port;
 }
 
-void Server::notify(){
-    if(debug > 0){
-        if(debug == 1)
-            *debug_file << "Server notify(): Receive new job!" << endl;
-        else if(debug == 2)
-            cout << "Server notify(): Receive new job!" << endl;
+void Server::notify(int msg){
+    // msg == 0 notitfy newjob, msg == 1 notitfy schedual finish
+    if(msg == 0){
+        if(debug > 0){
+            if(debug == 1)
+                *debug_file << "Server notify(0): Receive new job!" << endl;
+            else if(debug == 2)
+                cout << "Server notify(0): Receive new job!" << endl;
+        }
+        do_schedual_tex.lock();
+        do_schedual = true;
+        do_schedual_tex.unlock();
     }
-    do_schedual = true;
+    else if(msg == 1){
+        if(debug > 0){
+            if(debug == 1)
+                *debug_file << "Server notify(1): Schedualer finish schedual!" << endl;
+            else if(debug == 2)
+                cout << "Server notify(1): Schedualer finish schedual!" << endl;
+        }
+        schedual_busy_tex.lock();
+        schedual_busy = false;
+        schedual_busy_tex.unlock();
+    }
 }
 
 void Server::attach_success(){
@@ -120,8 +138,7 @@ void Server::run(){
     server_pool->enqueue(start_accept_thread,svr_ip,svr_port,request_pool);
     int count =0;
     while(1){
-        if(do_schedual){
-            do_schedual = false;
+        if(do_schedual && !schedual_busy){
             if(debug > 0){
                 if(debug == 1)
                     *debug_file << "conut:" << count << ": Server run(): Start send cmd to schedual." << endl;
@@ -129,6 +146,42 @@ void Server::run(){
                     cout << "conut:" << count << ": Server run(): Start send cmd to schedual." << endl;
                 count++;
             }
+            if(contact_scheduler() == 1){
+                do_schedual_tex.lock();
+                do_schedual = false;
+                do_schedual_tex.unlock();
+                schedual_busy_tex.lock();
+                schedual_busy = true;
+                schedual_busy_tex.unlock();
+            }
         }
     }
+}
+
+int Server::contact_scheduler(){
+    c_socket s;
+    Message do_schedual_msg;
+    if(s.setConnection(sch_ip,sch_port) != 1){
+        if(debug > 0){
+            if(debug == 1)
+                *debug_file << "Server contact_scheduler(): Server client socket creat error !" << endl;
+            else if(debug == 2)
+                cout << "Server contact_scheduler(): Server client socket creat error !" << endl;
+        }
+        return 0;
+    }
+    if(s.connect2server() != 1){
+        if(debug > 0){
+            if(debug == 1)
+                *debug_file << "Server contact_scheduler(): Server client socket connect error !" << endl;
+            else if(debug == 2)
+                cout << "Server contact_scheduler(): Server client socket connect error !" << endl;
+        }
+        return 0;
+    }
+    do_schedual_msg.initMessage();
+    do_schedual_msg.encode_Header("server","scheduler","do_schedual");
+    s.send(do_schedual_msg.encode_Message());
+    s.closeConnection();
+    return 1;
 }

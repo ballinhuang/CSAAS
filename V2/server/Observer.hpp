@@ -4,7 +4,7 @@
 class Observer
 {
 	public:
-		virtual void notify() = 0;
+		virtual void notify(int) = 0;
         virtual void attach_success()=0;
 };
 

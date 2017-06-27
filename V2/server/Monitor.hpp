@@ -25,6 +25,7 @@ class Monitor{
     //data
     public:
         void addjob(json);
+        void notitfyschedualfinish();
     private:
         std::vector<json> joblist;
         std::mutex jobtex;

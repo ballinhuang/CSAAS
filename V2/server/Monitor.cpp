@@ -14,7 +14,6 @@ Monitor *Monitor::GetInstance(){
         if (monitor == NULL)
         {
             monitor = new Monitor();
-            //cout << "creat moniter\n";
         }
         monitor_mtx.unlock();
     }
@@ -27,7 +26,11 @@ void Monitor::attachserver(Observer *obs) {
 }
 
 void Monitor::notitfynewjob(){
-    observer->notify();
+    observer->notify(0);
+}
+
+void Monitor::notitfyschedualfinish(){
+    observer->notify(1);
 }
 
 void Monitor::addjob(json newjob){
@@ -35,7 +38,6 @@ void Monitor::addjob(json newjob){
     newjob["JOBID"] = jobcount;
     jobcount++;
     joblist.push_back(newjob);
-    //cout << newjob.dump() << endl;
     notitfynewjob();
     jobtex.unlock();
 }
