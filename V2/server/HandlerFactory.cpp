@@ -3,27 +3,32 @@
 #include <fstream>
 using namespace std;
 
-extern bool debug;
+extern int debug;
 extern ofstream *debug_file;
 
 
 IHandler *HandlerFactory::getHandler(json request)
 {
-    if(debug){
-        *debug_file << "HandlerFactory getHandler(): SENDER = " + request["SENDER"].get<std::string>() 
-        + " RECEIVER = " + request["RECEIVER"].get<std::string>() 
-        + " REQUEST = " + request["REQUEST"].get<std::string>() << endl;
-    }
-        if(request["SENDER"].get<std::string>() == "subjob"   &&
-           request["RECEIVER"].get<std::string>() == "server" && 
-           request["REQUEST"].get<std::string>() == "newjob"){
-            if(debug){
+
+    //NewJobHandler
+    if(request["SENDER"].get<std::string>() == "subjob"   &&
+       request["RECEIVER"].get<std::string>() == "server" && 
+       request["REQUEST"].get<std::string>() == "newjob"){
+        if(debug > 0){
+            if(debug == 1)
                 *debug_file << "HandlerFactory getHandler(): Return NewJobHandler." << endl;
-            }
-            return new NewJobHandler(request);
+            else if(debug == 2)
+                cout << "HandlerFactory getHandler(): Return NewJobHandler." << endl;
         }
-    if(debug){
-        *debug_file << "ERROR request:" << endl << request.dump() << endl;
-        *debug_file << "HandlerFactory getHandler(): ERROR!!" << endl;
+        return new NewJobHandler(request);
     }
+
+    //ERROR
+    if(debug > 0){
+        if(debug == 1)
+            *debug_file << "HandlerFactory getHandler(): ERROR!!" << "----> ERROR request = " << endl << request.dump() << endl;
+        else if(debug == 2)
+            cout << "HandlerFactory getHandler(): ERROR!!" << "----> ERROR request = " << endl << request.dump() << endl;
+    }
+    
 }

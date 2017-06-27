@@ -9,17 +9,20 @@ using namespace std;
 
 mutex monitor_mtx;
 Monitor *Monitor::monitor=0;
-bool debug = false;
+int debug = 0;
 ofstream *debug_file;
 int main(int argc, char **argv){
     
     if(argc > 1){
         string arg;
         arg = std::string(argv[1]);
-        if(arg == "-debug"){
-            debug = true;
+        if(arg == "-fdebug"){
+            debug = 1;
             debug_file = new ofstream();
             debug_file->open("debug.txt");
+        }
+        else if(arg == "-odebug"){
+            debug = 2;
         }
     }
 
@@ -39,8 +42,11 @@ int main(int argc, char **argv){
         exit(EXIT_FAILURE);
     }
     else if(pid != 0) {
-        if(debug){
-            *debug_file << "shut down parent !" << endl;
+        if(debug > 0){
+            if(debug == 1)
+                *debug_file << "shut down parent !" << endl;
+            else if(debug == 2)
+                cout << "shut down parent !" << endl;
         }
     	return 0;
     }
