@@ -4,9 +4,11 @@
 #include<iostream>
 #include<ThreadPool.h>
 #include<map>
+#include<mutex>
 #include"Monitor.hpp"
 #include"Observer.hpp"
 #include"s_socket.hpp"
+#include"HandlerFactory.hpp"
 class Server : public Observer{
     public:
         Server(Monitor *m);
@@ -17,10 +19,11 @@ class Server : public Observer{
         void attach_success();
     private:
         static void start_accept_thread(std::string,std::string,ThreadPool*);
-        static void readrequest(s_socket*);
+        static void readrequest(s_socket*,HandlerFactory*);
         ThreadPool *request_pool;
         ThreadPool *server_pool;
         bool do_schedual=false;
+        std::mutex do_schedual_tex;
         std::string svr_ip,svr_port,sch_ip,sch_port;
         //std::map<std::string,Node>;
 };

@@ -9,9 +9,20 @@ using namespace std;
 
 mutex monitor_mtx;
 Monitor *Monitor::monitor=0;
-
+bool debug = false;
+ofstream *debug_file;
 int main(int argc, char **argv){
     
+    if(argc > 1){
+        string arg;
+        arg = std::string(argv[1]);
+        if(arg == "-debug"){
+            debug = true;
+            debug_file = new ofstream();
+            debug_file->open("debug.txt");
+        }
+    }
+
     ifstream f("server.con");
     string server_ip,server_port;
     f >> server_ip;
@@ -28,7 +39,9 @@ int main(int argc, char **argv){
         exit(EXIT_FAILURE);
     }
     else if(pid != 0) {
-    	cout << "shut down parent !" << endl;
+        if(debug){
+            *debug_file << "shut down parent !" << endl;
+        }
     	return 0;
     }
     //creat Server and Monitor , attach Server to Monitor.

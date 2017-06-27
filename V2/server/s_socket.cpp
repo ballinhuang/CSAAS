@@ -7,7 +7,7 @@
 #include <unistd.h>
 using namespace std;
 
-void s_socket::setConnection(string ip, string port){
+int s_socket::setConnection(string ip, string port){
 
     memset(&server_addr, '\0', sizeof(struct sockaddr_in));
     server_addr.sin_addr.s_addr = INADDR_ANY;
@@ -16,7 +16,7 @@ void s_socket::setConnection(string ip, string port){
 
     if( (sock_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1){
         cout << "Server socket creat error !" << endl;
-        exit(1);
+        return 0;
     }
 
     int on = 1;
@@ -25,6 +25,7 @@ void s_socket::setConnection(string ip, string port){
     {
         close(sock_fd);
         sock_fd = -3;
+        return 0;
     }
     /*
     if (setsockopt(sock_fd, SOL_SOCKET, SO_LINGER, &l_delay, sizeof(struct linger)) == -1)
@@ -36,13 +37,14 @@ void s_socket::setConnection(string ip, string port){
 
     if(bind(sock_fd, (struct sockaddr *)&server_addr, sizeof(struct sockaddr)) == -1) {
         cout << "server bind error !" << endl;
-        exit(1);
+        return 0;
     }
 
     if(listen(sock_fd, 256) == -1) {
         cout << "server listen error !" << endl;
-        exit(1);
+        return 0;
     }
+    return 1;
 }
 
 int s_socket::acceptClinet(){
@@ -57,10 +59,10 @@ int s_socket::acceptClinet(){
 string s_socket::readmessage(){
     string result = "";
     char buf[100];
-    memset(buf, '\0', 100);
-    while(read(conn_port,buf,100)){
+    memset(buf, 0, 100);
+    while(read(conn_port,buf,99)){
         result += buf;
-        memset(buf, '\0', 100);
+        memset(buf, 0, 100);
     }
     return result;
 }

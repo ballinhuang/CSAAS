@@ -9,7 +9,7 @@
 
 class s_socket{
     public:
-    void setConnection(std::string,std::string);
+    int setConnection(std::string,std::string);
     int acceptClinet();
     std::string readmessage();
     void closeConnection();

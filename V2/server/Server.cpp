@@ -1,11 +1,18 @@
 #include "Server.hpp"
 #include <iostream>
 #include <json.hpp>
+
 using json = nlohmann::json;
 using namespace std;
 
+#include <fstream>
+extern bool debug;
+extern ofstream *debug_file;
+
 Server::Server(Monitor *m){
-    cout << "attach to monitor\n";
+    if(debug){
+        *debug_file << "Server Server(): Attach to monitor" << endl;
+    }
     m->attachserver(this);
 }
 
@@ -20,39 +27,75 @@ void Server::set_scheduler_attr(string ip, string port){
 }
 
 void Server::notify(){
-    cout << "recuve new job!\n";
+    if(debug){
+        *debug_file << "Server notify(): Receive new job!" << endl;
+    }
     do_schedual = true;
 }
 
 void Server::attach_success(){
-    cout << "attach success\n";
+    if(debug){
+        *debug_file << "Server attach_success():Attach success." << endl;
+    }
 }
 
-void Server::readrequest(s_socket *s){
+void Server::readrequest(s_socket *s, HandlerFactory *factory){
+    if(debug){
+        *debug_file << "Server readrequest():Start read request." << endl;
+    }
     string res;
     res = s->readmessage();
+    if(debug){
+        *debug_file << "Server readrequest():Receive request = " << endl << res << endl;
+    }
     s->closeConnection();
-    json job = json::parse(res);
-    Monitor::GetInstance()->addjob(job);
+    json request = json::parse(res);
+    IHandler *handler =  factory->getHandler(request);
+    handler->handle();
+    if(debug){
+        *debug_file << "Server readrequest():End read request." << endl;
+    }
 }
 
 void Server::start_accept_thread(string ip, string port, ThreadPool* pool){
     pool = new ThreadPool(10);
+    HandlerFactory *factory = new HandlerFactory();
     while(1){
-        s_socket s;
-        s.setConnection(ip,port);
-        if(s.acceptClinet()){
-            s.setacceptreuse();
-            pool->enqueue(&readrequest,&s);
+        if(debug){
+            *debug_file << "Server start_accept_thread(): Creat new socket." << endl;
         }
-        s.closebind();
+        s_socket *s = new s_socket();
+        if(s->setConnection(ip,port) != 1){
+            if(debug){
+                *debug_file << "Server start_accept_thread(): setConnection() Error!" << endl;
+            }
+            continue;
+        }
+        if(s->acceptClinet()){
+            if(debug){
+                *debug_file << "Server start_accept_thread(): Accept client success." << endl;
+            }
+            s->setacceptreuse();
+            s->closebind();
+            pool->enqueue(&readrequest,s,factory);
+            if(debug){
+                *debug_file << "Server start_accept_thread(): Enque readrequest() to process_pool success." << endl;
+            }
+        }
     }
 }
 
 void Server::run(){
     server_pool = new ThreadPool(2);
     server_pool->enqueue(start_accept_thread,svr_ip,svr_port,request_pool);
+    int count =0;
     while(1){
-
+        if(do_schedual){
+            do_schedual = false;
+            if(debug){
+                *debug_file << "conut:" << count << ": Server run(): Start send cmd to schedual." << endl;
+                count++;
+            }
+        }
     }
 }

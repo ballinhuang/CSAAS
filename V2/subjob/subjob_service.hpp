@@ -3,12 +3,12 @@
 
 #include<iostream>
 #include<json.hpp>
-#include"job.hpp"
+#include"Message.hpp"
 class subjob_service{
     public:
-    void setenv_attrubute(job*);
-    void parse_script(job*,std::string);
-    void creatjob(job*,std::string);
+    void setenv_attrubute(Message*);
+    void parse_script(Message*,std::string);
+    void creatjob(Message*,std::string);
 };
 
 #endif

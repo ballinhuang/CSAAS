@@ -14,7 +14,7 @@ Monitor *Monitor::GetInstance(){
         if (monitor == NULL)
         {
             monitor = new Monitor();
-            cout << "creat moniter\n";
+            //cout << "creat moniter\n";
         }
         monitor_mtx.unlock();
     }
@@ -34,8 +34,8 @@ void Monitor::addjob(json newjob){
     jobtex.lock();
     newjob["JOBID"] = jobcount;
     jobcount++;
-    cout << newjob.dump();
     joblist.push_back(newjob);
+    //cout << newjob.dump() << endl;
     notitfynewjob();
     jobtex.unlock();
 }
