@@ -133,26 +133,76 @@ void Server::start_accept_thread(string ip, string port, ThreadPool* pool){
     }
 }
 
+void Server::check_schedule(){
+    now_time = time(NULL);
+    if(next_schedule - now_time <= 0){
+        if(debug > 0){
+            if(debug == 1)
+                *debug_file << "Server rucheck_schedulen(): Trigger to do scheduale." << endl;
+            else if(debug == 2)
+                cout << "Server rucheck_schedulen(): Trigger to do scheduale." << endl;
+        }
+        do_schedual_tex.lock();
+        do_schedual = true;
+        do_schedual_tex.unlock();
+    }
+}
+
 void Server::run(){
     server_pool = new ThreadPool(2);
     server_pool->enqueue(start_accept_thread,svr_ip,svr_port,request_pool);
+    sched_iteration = 60; //1 min
+    now_time = time(NULL);
+    next_schedule = now_time + sched_iteration;
     int count =0;
     while(1){
-        if(do_schedual && !schedual_busy){
-            if(debug > 0){
-                if(debug == 1)
-                    *debug_file << "conut:" << count << ": Server run(): Start send cmd to schedual." << endl;
-                else if(debug == 2)
-                    cout << "conut:" << count << ": Server run(): Start send cmd to schedual." << endl;
-                count++;
+        check_schedule();
+        if(do_schedual){
+            next_schedule = now_time + sched_iteration;
+            if(!schedual_busy){
+                if(debug > 0){
+                    if(debug == 1)
+                        *debug_file << "conut:" << count << ": Server run(): Start send cmd to schedual." << endl;
+                    else if(debug == 2)
+                        cout << "conut:" << count << ": Server run(): Start send cmd to schedual." << endl;
+                    count++;
+                }
+                if(contact_scheduler() == 1){
+                    do_schedual_tex.lock();
+                    do_schedual = false;
+                    do_schedual_tex.unlock();
+                    schedual_busy_tex.lock();
+                    schedual_busy = true;
+                    schedual_busy_tex.unlock();
+                    if(debug > 0){
+                        if(debug == 1)
+                            *debug_file << "Server run(): Contact_scheduler() scuuess." << endl;
+                        else if(debug == 2)
+                            cout << "Server run(): Contact_scheduler() scuuess." << endl;
+                    }
+                }
+                else{
+                    if(debug > 0){
+                        if(debug == 1)
+                            *debug_file << "Server run(): Contact_scheduler() fail." << endl;
+                        else if(debug == 2)
+                            cout << "Server run(): Contact_scheduler() fail." << endl;
+                    }
+                    do_schedual_tex.lock();
+                    do_schedual = false;
+                    do_schedual_tex.unlock();
+                }
             }
-            if(contact_scheduler() == 1){
+            else{
+                if(debug > 0){
+                    if(debug == 1)
+                        *debug_file << "Server run(): Scheduler is busy." << endl;
+                    else if(debug == 2)
+                        cout << "Server run(): Scheduler is busy." << endl;
+                }
                 do_schedual_tex.lock();
                 do_schedual = false;
                 do_schedual_tex.unlock();
-                schedual_busy_tex.lock();
-                schedual_busy = true;
-                schedual_busy_tex.unlock();
             }
         }
     }

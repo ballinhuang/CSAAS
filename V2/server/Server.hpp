@@ -5,6 +5,7 @@
 #include<ThreadPool.h>
 #include<map>
 #include<mutex>
+#include<ctime>
 #include"Monitor.hpp"
 #include"Observer.hpp"
 #include"s_socket.hpp"
@@ -19,12 +20,15 @@ class Server : public Observer{
         void attach_success();
     private:
         int contact_scheduler();
+        void check_schedule();
         static void start_accept_thread(std::string,std::string,ThreadPool*);
         static void readrequest(s_socket*,HandlerFactory*);
         ThreadPool *request_pool;
         ThreadPool *server_pool;
         bool do_schedual = false;
         bool schedual_busy = false;
+        int sched_iteration;
+        time_t next_schedule,now_time;
         std::mutex do_schedual_tex,schedual_busy_tex;
         std::string svr_ip,svr_port,sch_ip,sch_port;
         //std::map<std::string,Node>;
