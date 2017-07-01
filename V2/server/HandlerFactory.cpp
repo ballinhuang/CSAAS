@@ -7,7 +7,7 @@ extern int debug;
 extern ofstream *debug_file;
 
 
-IHandler *HandlerFactory::getHandler(json request)
+IHandler *HandlerFactory::getHandler(json request,s_socket *s)
 {
 
     //NewJobHandler
@@ -20,9 +20,11 @@ IHandler *HandlerFactory::getHandler(json request)
             else if(debug == 2)
                 cout << "HandlerFactory getHandler(): Return NewJobHandler." << endl;
         }
-        return new NewJobHandler(request);
+        return new NewJobHandler(request,s);
     }
+    //NewJobHandler
 
+    //RunJobHandler
     if(request["SENDER"].get<std::string>()   == "scheduler"    &&
        request["RECEIVER"].get<std::string>() == "server"       && 
        request["REQUEST"].get<std::string>()  == "runjob"){
@@ -32,8 +34,37 @@ IHandler *HandlerFactory::getHandler(json request)
             else if(debug == 2)
                 cout << "HandlerFactory getHandler(): Return RunJobHandler." << endl;
         }
-        return new RunJobHandler(request);
+        return new RunJobHandler(request,s);
     }
+    //RunJobHandler
+
+    //QueueStateHandler
+    if(request["SENDER"].get<std::string>()   == "scheduler"    &&
+       request["RECEIVER"].get<std::string>() == "server"       && 
+       request["REQUEST"].get<std::string>()  == "queuestate"){
+        if(debug > 0){
+            if(debug == 1)
+                *debug_file << "HandlerFactory getHandler(): Return QueueStateHandler." << endl;
+            else if(debug == 2)
+                cout << "HandlerFactory getHandler(): Return QueueStateHandler." << endl;
+        }
+        return new QueueStateHandler(request,s);
+    }
+    //QueueStateHandler
+
+    //NodeStateHandler
+    if(request["SENDER"].get<std::string>()   == "scheduler"    &&
+       request["RECEIVER"].get<std::string>() == "server"       && 
+       request["REQUEST"].get<std::string>()  == "nodestate"){
+        if(debug > 0){
+            if(debug == 1)
+                *debug_file << "HandlerFactory getHandler(): Return NodeStateHandler." << endl;
+            else if(debug == 2)
+                cout << "HandlerFactory getHandler(): Return NodeStateHandler." << endl;
+        }
+        return new NodeStateHandler(request,s);
+    }
+    //NodeStateHandler
 
     //ERROR
     if(debug > 0){
@@ -43,4 +74,5 @@ IHandler *HandlerFactory::getHandler(json request)
             cout << "HandlerFactory getHandler(): ERROR!!" << "----> ERROR request = " << endl << request.dump() << endl;
     }
     
+    return NULL;
 }

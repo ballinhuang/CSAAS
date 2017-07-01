@@ -51,6 +51,7 @@ int main(int argc, char **argv){
     	return 0;
     }
     //creat Server and Monitor , attach Server to Monitor.
+    Monitor::GetInstance()->setnodelist();
     Server server(Monitor::GetInstance());
     server.set_server_attr(server_ip,server_port);
     server.set_scheduler_attr(scheduler_ip,scheduler_port);

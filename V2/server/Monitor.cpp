@@ -1,6 +1,8 @@
 #include "Monitor.hpp"
-#include "iostream"
-#include "cstdio"
+#include "Node.hpp"
+#include <iostream>
+#include <fstream>
+#include <cstdio>
 #include <json.hpp>
 
 using namespace std;
@@ -36,8 +38,47 @@ void Monitor::notitfyschedualfinish(){
 void Monitor::addjob(json newjob){
     jobtex.lock();
     newjob["JOBID"] = jobcount;
+    newjob["JOBSTAT"] = "WAITE";
     jobcount++;
     joblist.push_back(newjob);
     notitfynewjob();
     jobtex.unlock();
+}
+
+json Monitor::getjobstat(){
+    json result;
+    jobtex.lock();
+    int i = 0;
+    for(vector<json>::iterator it = joblist.begin() ; it != joblist.end() ; it++){
+        result["JOBID"][i] = (*it)["JOBID"];
+        i++;
+    }
+    jobtex.unlock();
+    return result;
+}
+
+void Monitor::setnodelist(){
+    ifstream nodes_fd;
+    nodes_fd.open("node.con");
+    string ip,port,name;
+    //error concern
+    while( nodes_fd >> ip >> port >> name){
+        Node node;
+        node.setnodeip(ip);
+        node.setnodeport(port);
+        node.setnodename(name);
+        nodelist[name] = node;
+    }
+}
+
+json Monitor::getnodelist(){
+    json result;
+    int i = 0;
+    for(map<string,Node>::iterator it = nodelist.begin() ; it != nodelist.end() ; it++){
+        result["NODENAME"][i] = it->second.getnodename();
+        result["NODEIP"][i] = it->second.getnodeip();
+        result["NODEPORT"][i] = it->second.getnodeport();
+        i++;
+    }
+    return result;
 }

@@ -98,3 +98,11 @@ void s_socket::setacceptreuse(){
     int sockoptval = 1;
     setsockopt(conn_port, SOL_SOCKET, SO_REUSEADDR, (void *)&sockoptval, sizeof(sockoptval));
 }
+
+string s_socket::getClientIP(){
+    return string::(client_addr.sin_addr.s_addr);
+}
+
+string s_socket::getClientPort(){
+    return string::(client_addr.sin_port);
+}

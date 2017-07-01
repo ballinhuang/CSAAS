@@ -3,7 +3,9 @@
 
 #include <mutex>
 #include <vector>
+#include <map>
 #include <json.hpp>
+#include "Node.hpp"
 #include "Observer.hpp"
 
 using json = nlohmann::json;
@@ -26,7 +28,11 @@ class Monitor{
     public:
         void addjob(json);
         void notitfyschedualfinish();
+        json getjobstat();
+        void setnodelist();
+        json getnodelist();
     private:
+        std::map<std::string,Node> nodelist;
         std::vector<json> joblist;
         std::mutex jobtex;
         int jobcount = 0; 

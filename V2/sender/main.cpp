@@ -1,6 +1,6 @@
 #include<iostream>
 #include"Message.hpp"
-#include"c_socket.hpp"
+#include"cc_socket.hpp"
 #include <fstream>
 #include <string>
 
@@ -22,9 +22,10 @@ int main(int argc, char **argv){
     msg.initMessage();
     msg.encode_Header(sender,receiver,request);
 
-    c_socket csock;
+    cc_socket csock;
     csock.setConnection("127.0.0.1","5001");
     csock.connect2server();
     csock.send(msg.encode_Message());
+    cout << csock.receive() << endl;
     csock.closeConnection();
 }

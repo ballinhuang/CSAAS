@@ -81,9 +81,8 @@ void Server::readrequest(s_socket *s, HandlerFactory *factory){
         else if(debug == 2)
             cout << "Server readrequest():Receive request = " << endl << res << endl;
     }
-    s->closeConnection();
     json request = json::parse(res);
-    IHandler *handler =  factory->getHandler(request);
+    IHandler *handler =  factory->getHandler(request,s);
     handler->handle();
     if(debug > 0){
         if(debug == 1)
@@ -138,9 +137,9 @@ void Server::check_schedule(){
     if(next_schedule - now_time <= 0){
         if(debug > 0){
             if(debug == 1)
-                *debug_file << "Server rucheck_schedulen(): Trigger to do scheduale." << endl;
+                *debug_file << "Server check_schedulen(): Trigger to do scheduale." << endl;
             else if(debug == 2)
-                cout << "Server rucheck_schedulen(): Trigger to do scheduale." << endl;
+                cout << "Server check_schedulen(): Trigger to do scheduale." << endl;
         }
         do_schedual_tex.lock();
         do_schedual = true;
@@ -176,9 +175,9 @@ void Server::run(){
                     schedual_busy_tex.unlock();
                     if(debug > 0){
                         if(debug == 1)
-                            *debug_file << "Server run(): Contact_scheduler() scuuess." << endl;
+                            *debug_file << "Server run(): Contact_scheduler() sccess." << endl;
                         else if(debug == 2)
-                            cout << "Server run(): Contact_scheduler() scuuess." << endl;
+                            cout << "Server run(): Contact_scheduler() sccess." << endl;
                     }
                 }
                 else{

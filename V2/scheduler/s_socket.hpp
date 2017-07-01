@@ -14,7 +14,8 @@ class s_socket{
     std::string readmessage();
     void closeConnection();
     void closebind();
-    //void getClientaddr();
+    std::string getClientIP();
+    std::string getClientPort();
     void setacceptreuse();
     void sendmessage(std::string);
     private:

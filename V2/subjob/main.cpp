@@ -1,6 +1,6 @@
 #include<iostream>
 #include"Message.hpp"
-#include"c_socket.hpp"
+#include"cc_socket.hpp"
 #include"subjob_service.hpp"
 #include <fstream>
 #include <string>
@@ -29,9 +29,13 @@ int main(int argc, char **argv){
     f >> ip;
     f >> port;
 
-    c_socket csock;
-    csock.setConnection(ip,port);
-    csock.connect2server();
+    cc_socket csock;
+    if(csock.setConnection(ip,port) != 1 ){
+        exit(1);
+    }
+    if(csock.connect2server() != 1 ){
+        exit(1);
+    }
     csock.send(newjob.encode_Message());
     csock.closeConnection();
 

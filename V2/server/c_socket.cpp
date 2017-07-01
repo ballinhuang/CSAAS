@@ -28,7 +28,14 @@ int c_socket::connect2server(){
     return 1;
 }
 
+void c_socket::sendhendshack(int size){
+    char num[10];
+    sprintf(num,"%d",size);
+    write(sock_fd,num,sizeof(num));
+}
+
 void c_socket::send(string msg){
+    sendhendshack(msg.size());
     char *buf = new char[msg.size()];
     strcpy(buf,msg.c_str());
     write(sock_fd,buf,msg.size());
