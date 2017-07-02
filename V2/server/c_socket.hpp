@@ -13,7 +13,7 @@ class c_socket{
     int connect2server();
     void send(std::string);
     void closeConnection();
-
+    void sendhendshack(int);
     private:
     struct sockaddr_in server_addr;
     int sock_fd;

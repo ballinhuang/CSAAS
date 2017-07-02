@@ -1,11 +1,12 @@
 #include "ScheHandlerFactory.hpp"
 #include <iostream>
+#include <fstream>
 
 using namespace std;
 extern int debug;
 extern ofstream *debug_file;
 
-IScheHandler ScheHandlerFactory::getScheHandler(string mode, cc_socket *socket){
+IScheHandler *ScheHandlerFactory::getScheHandler(string mode, cc_socket *socket){
     if(mode == "FIFO"){
         if(debug > 0){
             if(debug == 1)

@@ -36,9 +36,12 @@ void c_socket::sendhendshack(int size){
 
 void c_socket::send(string msg){
     sendhendshack(msg.size());
-    char *buf = new char[msg.size()];
+    char *buf = (char*)malloc(sizeof(char) * (msg.size()+1));
+    memset(buf,0,msg.size()+1);
     strcpy(buf,msg.c_str());
     write(sock_fd,buf,msg.size());
+    memset(buf,0,msg.size()+1);
+    free(buf);
 }
 
 void c_socket::closeConnection(){

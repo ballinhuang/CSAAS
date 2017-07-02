@@ -7,6 +7,7 @@
 #include <json.hpp>
 #include "Node.hpp"
 #include "Observer.hpp"
+#include <ThreadPool.h>
 
 using json = nlohmann::json;
 
@@ -31,10 +32,15 @@ class Monitor{
         json getjobstat();
         void setnodelist();
         json getnodelist();
+        void setjobtoready(int);
     private:
         std::map<std::string,Node> nodelist;
-        std::vector<json> joblist;
+        std::map<int,json> joblist;
+        std::map<int,json> readylist;
+        std::map<int,json> runninglist;
+        std::map<int,json> completelist;
         std::mutex jobtex;
+        std::mutex readytex;
         int jobcount = 0; 
         void notitfynewjob();
 };

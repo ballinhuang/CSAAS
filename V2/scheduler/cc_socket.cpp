@@ -11,7 +11,6 @@ int cc_socket::setConnection(string ip, string port){
     server_addr.sin_addr.s_addr = inet_addr(ip.c_str());
     server_addr.sin_port = htons(stoi(port));
     server_addr.sin_family = AF_INET;
-    cout << ip << " " << stoi(port) << endl;
     if( (sock_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1){
         cout << "subjob client socket creat error !" << endl;
         return 0;
@@ -29,9 +28,12 @@ int cc_socket::connect2server(){
 
 void cc_socket::send(string msg){
     sendhendshack(msg.size());
-    char *buf = new char[msg.size()];
+    char *buf = (char*)malloc(sizeof(char) * (msg.size()+1));
+    memset(buf,0,msg.size()+1);
     strcpy(buf,msg.c_str());
     write(sock_fd,buf,msg.size());
+    memset(buf,0,msg.size()+1);
+    free(buf);
 }
 
 void cc_socket::closeConnection(){
@@ -46,10 +48,13 @@ void cc_socket::sendhendshack(int size){
 
 string cc_socket::receive(){
     int size = receivehendshack();
-    char *buf = new char[size+1];
+    char *buf = (char*)malloc(sizeof(char) * (size+1));
+    memset(buf,0,size+1);
     read(sock_fd,buf,(size_t)size);
     string result = buf;
-    return buf;
+    memset(buf,0,size+1);
+    free(buf);
+    return result;
 }
 
 int cc_socket::receivehendshack(){

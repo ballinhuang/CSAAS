@@ -11,7 +11,6 @@ void cc_socket::setConnection(string ip, string port){
     server_addr.sin_addr.s_addr = inet_addr(ip.c_str());
     server_addr.sin_port = htons(stoi(port));
     server_addr.sin_family = AF_INET;
-    cout << ip << " " << stoi(port) << endl;
     if( (sock_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1){
         cout << "subjob client socket creat error !" << endl;
         exit(1);

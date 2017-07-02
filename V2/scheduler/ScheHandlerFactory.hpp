@@ -8,7 +8,7 @@
 
 class ScheHandlerFactory{
     public:
-    static IScheHandler *getScheHandler(std::string,cc_socket*);
+    static IScheHandler *getScheHandler(std::string, cc_socket*);
 };
 
 #endif

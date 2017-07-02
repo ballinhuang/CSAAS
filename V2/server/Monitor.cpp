@@ -1,5 +1,6 @@
 #include "Monitor.hpp"
 #include "Node.hpp"
+#include <ThreadPool.h>
 #include <iostream>
 #include <fstream>
 #include <cstdio>
@@ -8,6 +9,9 @@
 using namespace std;
 using json = nlohmann::json;
 extern mutex monitor_mtx;
+
+extern int debug;
+extern ofstream *debug_file;
 
 Monitor *Monitor::GetInstance(){
     if (monitor == NULL)
@@ -39,9 +43,28 @@ void Monitor::addjob(json newjob){
     jobtex.lock();
     newjob["JOBID"] = jobcount;
     newjob["JOBSTAT"] = "WAITE";
+    joblist[jobcount] = newjob;
     jobcount++;
-    joblist.push_back(newjob);
     notitfynewjob();
+    jobtex.unlock();
+}
+
+void Monitor::setjobtoready(int jobid){
+    map<int , json>::iterator iter;
+    iter = joblist.find(jobid);
+    if(iter == joblist.end())
+        return;
+    readytex.lock();
+    readylist[jobid] = iter->second;
+    if(debug > 0){
+        if(debug == 1)
+            *debug_file << "Monitor setjobtoready(): Move job to ready queue  jobid = " << jobid << " content = " << readylist[jobid].dump() << endl;
+        else if(debug == 2)
+            cout << "Monitor setjobtoready(): Move job to ready queue  jobid = " << jobid << " content = " << readylist[jobid].dump() << endl;
+    }
+    readytex.unlock();
+    jobtex.lock();
+    joblist.erase(iter);
     jobtex.unlock();
 }
 
@@ -49,11 +72,12 @@ json Monitor::getjobstat(){
     json result;
     jobtex.lock();
     int i = 0;
-    for(vector<json>::iterator it = joblist.begin() ; it != joblist.end() ; it++){
-        result["JOBID"][i] = (*it)["JOBID"];
+    for(map<int,json>::iterator it = joblist.begin() ; it != joblist.end() ; it++){
+        result["JOBID"][i] = (it->second)["JOBID"];
         i++;
     }
     jobtex.unlock();
+    result["JOBCOUNT"] = i;
     return result;
 }
 
@@ -80,5 +104,6 @@ json Monitor::getnodelist(){
         result["NODEPORT"][i] = it->second.getnodeport();
         i++;
     }
+    result["NODECOUNT"] = i;
     return result;
 }

@@ -59,10 +59,12 @@ int s_socket::acceptClinet(){
 string s_socket::readmessage(){
     int size = receivehendshack();
     string result = "";
-    char *buf = new char[size+1];
-    memset(buf, 0, size+1);
+    char *buf = (char*)malloc(sizeof(char) * (size+1));
+    memset(buf,0,size+1);
     read(conn_port,buf,(size_t)size);
     result = buf;
+    memset(buf,0,size+1);
+    free(buf);
     return result;
 }
 
@@ -75,9 +77,12 @@ int s_socket::receivehendshack(){
 
 void s_socket::sendmessage(string msg){
     sendhendshack(msg.size());
-    char *buf = new char[msg.size()];
+    char *buf = (char*)malloc(sizeof(char) * (msg.size()+1));
+    memset(buf,0,msg.size()+1);
     strcpy(buf,msg.c_str());
     write(conn_port,buf,msg.size());
+    memset(buf,0,msg.size()+1);
+    free(buf);
 }
 
 void s_socket::sendhendshack(int size){

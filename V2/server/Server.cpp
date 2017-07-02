@@ -3,6 +3,7 @@
 #include <json.hpp>
 #include "c_socket.hpp"
 #include "Message.hpp"
+#include <unistd.h>
 
 using json = nlohmann::json;
 using namespace std;
@@ -33,6 +34,7 @@ void Server::set_scheduler_attr(string ip, string port){
 
 void Server::notify(int msg){
     // msg == 0 notitfy newjob, msg == 1 notitfy schedual finish
+    //sleep(1);
     if(msg == 0){
         if(debug > 0){
             if(debug == 1)
@@ -73,23 +75,33 @@ void Server::readrequest(s_socket *s, HandlerFactory *factory){
         else if(debug == 2)
             cout << "Server readrequest():Start read request." << endl;
     }
-    string res;
-    res = s->readmessage();
-    if(debug > 0){
-        if(debug == 1)
-            *debug_file << "Server readrequest():Receive request = " << endl << res << endl;
-        else if(debug == 2)
-            cout << "Server readrequest():Receive request = " << endl << res << endl;
+    
+    while( 1 ){
+        string res = "";
+        res = s->readmessage();
+        if(res == ""){
+            break;
+        }
+        if(debug > 0){
+            if(debug == 1)
+                *debug_file << "Server readrequest():Receive request = " << endl << res << endl;
+            else if(debug == 2)
+                cout << "Server readrequest():Receive request = " << endl << res << endl;
+        }
+        json request = json::parse(res);
+        IHandler *handler =  factory->getHandler(request,s);
+        if(handler == NULL){
+            break;
+        }
+        handler->handle();
+        if(debug > 0){
+            if(debug == 1)
+                *debug_file << "Server readrequest():End read request." << endl;
+            else if(debug == 2)
+                cout << "Server readrequest():End read request." << endl;
+        }
     }
-    json request = json::parse(res);
-    IHandler *handler =  factory->getHandler(request,s);
-    handler->handle();
-    if(debug > 0){
-        if(debug == 1)
-            *debug_file << "Server readrequest():End read request." << endl;
-        else if(debug == 2)
-            cout << "Server readrequest():End read request." << endl;
-    }
+    s->closeConnection();
 }
 
 void Server::start_accept_thread(string ip, string port, ThreadPool* pool){
@@ -209,7 +221,7 @@ void Server::run(){
 
 int Server::contact_scheduler(){
     c_socket s;
-    Message do_schedual_msg;
+    Message do_schedule_msg;
     if(s.setConnection(sch_ip,sch_port) != 1){
         if(debug > 0){
             if(debug == 1)
@@ -228,9 +240,11 @@ int Server::contact_scheduler(){
         }
         return 0;
     }
-    do_schedual_msg.initMessage();
-    do_schedual_msg.encode_Header("server","scheduler","do_schedual");
-    s.send(do_schedual_msg.encode_Message());
+    do_schedule_msg.initMessage();
+    do_schedule_msg.msg["IP"] = svr_ip;
+    do_schedule_msg.msg["PORT"] = svr_port;
+    do_schedule_msg.encode_Header("server","scheduler","do_schedule");
+    s.send(do_schedule_msg.encode_Message());
     s.closeConnection();
     return 1;
 }

@@ -23,9 +23,9 @@ int main(int argc, char **argv){
     msg.encode_Header(sender,receiver,request);
 
     cc_socket csock;
-    csock.setConnection("127.0.0.1","5001");
+    csock.setConnection("127.0.0.1","5002");
     csock.connect2server();
     csock.send(msg.encode_Message());
-    cout << csock.receive() << endl;
+    //cout << csock.receive() << endl;
     csock.closeConnection();
 }
