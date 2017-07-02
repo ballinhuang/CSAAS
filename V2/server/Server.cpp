@@ -160,7 +160,7 @@ void Server::check_schedule(){
 }
 
 void Server::run(){
-    server_pool = new ThreadPool(2);
+    server_pool = new ThreadPool(1);
     server_pool->enqueue(start_accept_thread,svr_ip,svr_port,request_pool);
     sched_iteration = 60; //1 min
     now_time = time(NULL);

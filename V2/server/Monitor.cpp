@@ -55,6 +55,7 @@ void Monitor::setjobtoready(int jobid){
     if(iter == joblist.end())
         return;
     readytex.lock();
+    (iter->second)["JOBSTAT"] = "READY";
     readylist[jobid] = iter->second;
     if(debug > 0){
         if(debug == 1)
@@ -66,6 +67,33 @@ void Monitor::setjobtoready(int jobid){
     jobtex.lock();
     joblist.erase(iter);
     jobtex.unlock();
+}
+
+void Monitor::setjobtorunning(int jobid, string node){
+    map<int , json>::iterator iter;
+    readytex.lock();
+    iter = readylist.find(jobid);
+    if(iter != readylist.end()){
+        runningtex.lock();
+        (iter->second)["JOBSTAT"] = "RUNNING";
+        runninglist[jobid] = iter->second;
+        (runninglist[jobid])["NODE"].push_back(node);
+        runningtex.unlock();
+        readylist.erase(iter);
+        readytex.unlock();
+    }
+    else{
+        readytex.unlock();
+        runningtex.lock();
+        (runninglist[jobid])["NODE"].push_back(node);
+        runningtex.unlock();
+    }
+    if(debug > 0){
+        if(debug == 1)
+            *debug_file << "Monitor setjobtorunning(): Move job to running queue  jobid = " << jobid << " content = " << runninglist[jobid].dump() << endl;
+        else if(debug == 2)
+            cout << "Monitor setjobtorunning(): Move job to running queue  jobid = " << jobid << " content = " << runninglist[jobid].dump() << endl;
+    }
 }
 
 json Monitor::getjobstat(){
@@ -105,5 +133,17 @@ json Monitor::getnodelist(){
         i++;
     }
     result["NODECOUNT"] = i;
+    return result;
+}
+
+Node Monitor::getnodeinfo(string nodename){
+    return nodelist[nodename];
+}
+
+json Monitor::getjobinfo(int jobid){
+    json result;
+    runningtex.lock();
+    result = readylist[jobid];
+    runningtex.unlock();
     return result;
 }

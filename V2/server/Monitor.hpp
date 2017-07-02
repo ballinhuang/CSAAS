@@ -33,6 +33,9 @@ class Monitor{
         void setnodelist();
         json getnodelist();
         void setjobtoready(int);
+        void setjobtorunning(int,std::string);
+        Node getnodeinfo(std::string);
+        json getjobinfo(int);
     private:
         std::map<std::string,Node> nodelist;
         std::map<int,json> joblist;
@@ -41,6 +44,7 @@ class Monitor{
         std::map<int,json> completelist;
         std::mutex jobtex;
         std::mutex readytex;
+        std::mutex runningtex;
         int jobcount = 0; 
         void notitfynewjob();
 };
