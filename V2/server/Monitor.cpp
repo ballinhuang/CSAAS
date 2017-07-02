@@ -49,45 +49,49 @@ void Monitor::addjob(json newjob){
     jobtex.unlock();
 }
 
-void Monitor::setjobtoready(int jobid){
+void Monitor::setjobtoready(int jobid, string node){
     map<int , json>::iterator iter;
+    jobtex.lock();
     iter = joblist.find(jobid);
-    if(iter == joblist.end())
-        return;
-    readytex.lock();
-    (iter->second)["JOBSTAT"] = "READY";
-    readylist[jobid] = iter->second;
+    if(iter != joblist.end()){
+        readytex.lock();
+        (iter->second)["JOBSTAT"] = "READY";
+        readylist[jobid] = iter->second;
+        (readylist[jobid])["RUNNODE"].push_back(node);
+        readytex.unlock();
+        joblist.erase(iter);
+        jobtex.unlock();
+    }
+    else{
+        jobtex.unlock();
+        readytex.lock();
+        (runninglist[jobid])["RUNNODE"].push_back(node);
+        readytex.unlock();
+    }
     if(debug > 0){
         if(debug == 1)
             *debug_file << "Monitor setjobtoready(): Move job to ready queue  jobid = " << jobid << " content = " << readylist[jobid].dump() << endl;
         else if(debug == 2)
             cout << "Monitor setjobtoready(): Move job to ready queue  jobid = " << jobid << " content = " << readylist[jobid].dump() << endl;
     }
-    readytex.unlock();
-    jobtex.lock();
-    joblist.erase(iter);
-    jobtex.unlock();
 }
 
-void Monitor::setjobtorunning(int jobid, string node){
+void Monitor::setjobtorunning(int jobid,string mothor){
     map<int , json>::iterator iter;
     readytex.lock();
     iter = readylist.find(jobid);
-    if(iter != readylist.end()){
-        runningtex.lock();
-        (iter->second)["JOBSTAT"] = "RUNNING";
-        runninglist[jobid] = iter->second;
-        (runninglist[jobid])["NODE"].push_back(node);
-        runningtex.unlock();
-        readylist.erase(iter);
+    if(iter == readylist.end()){
         readytex.unlock();
+        return;
     }
-    else{
-        readytex.unlock();
-        runningtex.lock();
-        (runninglist[jobid])["NODE"].push_back(node);
-        runningtex.unlock();
-    }
+    (iter->second)["JOBSTAT"] = "RUNNING";
+    (iter->second)["MOTHERNODE"] = mothor;
+    runningtex.lock();
+    runninglist[jobid] = iter->second;
+    runningtex.unlock();
+    readylist.erase(iter);
+    readytex.unlock();
+    
     if(debug > 0){
         if(debug == 1)
             *debug_file << "Monitor setjobtorunning(): Move job to running queue  jobid = " << jobid << " content = " << runninglist[jobid].dump() << endl;
@@ -141,9 +145,15 @@ Node Monitor::getnodeinfo(string nodename){
 }
 
 json Monitor::getjobinfo(int jobid){
+    map<int , json>::iterator iter;
     json result;
-    runningtex.lock();
-    result = readylist[jobid];
-    runningtex.unlock();
+    readytex.lock();
+    iter = readylist.find(jobid);
+    if(iter == readylist.end()){
+        readytex.unlock();
+        return NULL;
+    }
+    result = iter->second;
+    readytex.unlock();
     return result;
 }

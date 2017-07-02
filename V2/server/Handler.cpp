@@ -31,19 +31,35 @@ RunJobHandler::RunJobHandler(json req_run, s_socket *socket){
 }
 
 void RunJobHandler::handle(){
+    int task_count;
     if(req_runjob.count("JOBID") != 0){
-        int task_count = req_runjob["TASKCOUNT"].get<int>();
+        task_count = req_runjob["TASKCOUNT"].get<int>();
         for(int i = 0 ; i < task_count ; i++){
-            Monitor::GetInstance()->setjobtoready(req_runjob["JOBID"][i].get<int>());
+            Monitor::GetInstance()->setjobtoready(req_runjob["JOBID"][i].get<int>(),req_runjob["NODENAME"][i].get<std::string>());
         }
     }
+    else
+    {
+        Monitor::GetInstance()->notitfyschedualfinish();
+        return;
+    }
+    //ERROR CONCERN
     Monitor::GetInstance()->notitfyschedualfinish();
-    if(req_runjob.count("JOBID") != 0){
-        int task_count = req_runjob["TASKCOUNT"].get<int>();
-        for(int i = 0 ; i < task_count ; i++){
-            string req_node = req_runjob["NODENAME"][i].get<std::string>();
+    for(int i = 0 ; i < task_count ; i++){
+
+        json jobinfo = Monitor::GetInstance()->getjobinfo(req_runjob["JOBID"][i].get<int>());
+        if(jobinfo == NULL){
+            continue;
+        }
+
+        c_socket socket;
+        Message message;
+        message.msg = jobinfo;
+
+        for(int j = 0 ; j < jobinfo["RUNNODE"].size() ; j++){
+            string req_node = jobinfo["RUNNODE"][j];
             Node node = Monitor::GetInstance()->getnodeinfo(req_node);
-            c_socket socket;
+            
             if(socket.setConnection(node.getnodeip(),node.getnodeport()) == 0){
                 if(debug > 0){
                     if(debug == 1)
@@ -62,13 +78,35 @@ void RunJobHandler::handle(){
                 }
                 continue;
             }
-            Message message;
-            message.msg = Monitor::GetInstance()->getjobinfo(req_runjob["JOBID"][i].get<int>());
-            message.encode_Header("server","mom","runjob");
-            socket.send(message.encode_Message());
-            socket.closeConnection();
-            Monitor::GetInstance()->setjobtorunning(req_runjob["JOBID"][i].get<int>(),req_node);
+
+            message.msg["MOTHERNODE"] = node.getnodename();
+            break;
         }
+
+        if(message.msg.count("MOTHERNODE") == 0){
+            // push_font to the joblist ??
+            return;
+        }
+            
+
+        for(int j = 0 ; j < jobinfo["RUNNODE"].size() ; j++){
+            string req_node = jobinfo["RUNNODE"][j];
+            Node node = Monitor::GetInstance()->getnodeinfo(req_node);
+            message.msg["RUNNODEIP"].push_back(node.getnodeip());
+            message.msg["RUNNODEPORT"].push_back(node.getnodeport());
+        }
+        
+        
+        message.encode_Header("server","mom","runjob");
+        if(debug > 0){
+            if(debug == 1)
+                *debug_file << "RunJobHandler handle(): the message send to mom = " << endl << message.encode_Message() << endl;
+            else if(debug == 2)
+                cout << "RunJobHandler handle(): the message send to mom = " << endl << message.encode_Message() << endl;
+        }
+        socket.send(message.encode_Message());
+        socket.closeConnection();
+        Monitor::GetInstance()->setjobtorunning(req_runjob["JOBID"][i].get<int>(),message.msg["MOTHERNODE"].get<string>());
     }
 }
 

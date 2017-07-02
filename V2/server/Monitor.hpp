@@ -32,7 +32,7 @@ class Monitor{
         json getjobstat();
         void setnodelist();
         json getnodelist();
-        void setjobtoready(int);
+        void setjobtoready(int,std::string);
         void setjobtorunning(int,std::string);
         Node getnodeinfo(std::string);
         json getjobinfo(int);
