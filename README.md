@@ -24,8 +24,8 @@ $ vim scheduler.con
 <scheduler's ip> <scheduler's port>
 
 $ vim node.con
-<node's ip> <node's port> <node's name>
-<node's ip> <node's port> <node's name>
+<node1's ip> <node1's port> <node1's name>
+<node2's ip> <node2's port> <node2's name>
 ...
 
 ```
@@ -50,7 +50,7 @@ $ vim subjob.con
 <server's ip> <server's port>
 ```
 
-# Exampel
+# Example
 (-command) --> optional
 
 ```
