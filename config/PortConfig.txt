@@ -1,3 +1,0 @@
-server 11300
-scheduler 11301
-client 11280

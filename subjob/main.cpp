@@ -1,6 +1,7 @@
 #include<iostream>
-#include"job.hpp"
-#include"c_socket.hpp"
+#include"Message.hpp"
+#include"cc_socket.hpp"
+#include"subjob_service.hpp"
 #include <fstream>
 #include <string>
 
@@ -17,20 +18,25 @@ int main(int argc, char **argv){
         exit(1);
     }
     
-    job newjob;
-    newjob.initjob();
-    newjob.setenv();
-    newjob.parse_script(script_name);
+    Message newjob;
+    newjob.initMessage();
+    
+    subjob_service srv;
+    srv.creatjob(&newjob, script_name);
 
     ifstream f("subjob.con");
     string ip,port;
     f >> ip;
     f >> port;
 
-    c_socket csock;
-    csock.setConnection(ip,port);
-    csock.connect2server();
-    csock.send(newjob.encode_job());
+    cc_socket csock;
+    if(csock.setConnection(ip,port) != 1 ){
+        exit(1);
+    }
+    if(csock.connect2server() != 1 ){
+        exit(1);
+    }
+    csock.send(newjob.encode_Message());
     csock.closeConnection();
 
 }
