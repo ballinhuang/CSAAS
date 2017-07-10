@@ -10,13 +10,13 @@ scheduler | determine which job to be run
 subjob | when client send the script, parse it to server
 
 # Compile
-```bash
+```
 $ make all
 ```
 
 # Configure file need
 ### server
-```bash
+```
 $ vim server.con
 <server's ip> <server's port>
 
@@ -53,7 +53,7 @@ $ vim subjob.con
 # Exampel
 (-command) --> optional
 
-```bash
+```
 $ cd server
 $ ./server (-odebug)
 $ cd ..
