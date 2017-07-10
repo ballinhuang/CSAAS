@@ -1,12 +1,24 @@
-CC = g++
-INCLUDE = ../lib
-LIB = -lpthread
+CC := g++ -std=c++11
+CPPFLAGS := -Wall -O2
+INCLUDE := ../lib
+LIB := -lpthread
+SRCS := $(shell ls *.cpp)
+MODEL := ../lib/Message.o ../lib/cc_socket.o ../lib/s_socket.o
+OBJS:=$(subst .cpp,.o,$(SRCS))
+RM:=rm -f
 
 all: scheduler clean
 
-scheduler: ../lib/Message.o main.o ../lib/cc_socket.o ../lib/s_socket.o scheduler_service.o ScheHandler.o ScheHandlerFactory.o 
-	${CC} *.o ${LIB} -I ${INCLUDE} -o $@
+scheduler: $(OBJS) $(MODEL)
+	@echo "------ Linking ------" && \
+	$(CC) $(CPPFLAGS) $(LIB) -I ${INCLUDE} $^ -o $@ && \
+	echo  "------ Success ------" || echo "------ Fail! ------"
+
 %.o: %.cpp
-	${CC} $^ ${LIB} -I ${INCLUDE} -c
+	@echo "------ Compile >> " $^ "to" $@ && \
+	$(CC) $(CPPFLAGS) ${LIB} -I ${INCLUDE} -c $^ -o $@ && \
+	echo  "------ Success ------" || echo "------ Fail! ------"
+
 clean:
-	rm -f *.o
+	@$(RM) $(OBJS) && \
+	echo "------ Clear ------"

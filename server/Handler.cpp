@@ -56,7 +56,7 @@ void RunJobHandler::handle(){
         Message message;
         message.msg = jobinfo;
 
-        for(int j = 0 ; j < jobinfo["RUNNODE"].size() ; j++){
+        for(int j = 0 ; j < (int)(jobinfo["RUNNODE"].size()) ; j++){
             string req_node = jobinfo["RUNNODE"][j];
             Node node = Monitor::GetInstance()->getnodeinfo(req_node);
             
@@ -89,7 +89,7 @@ void RunJobHandler::handle(){
         }
             
 
-        for(int j = 0 ; j < jobinfo["RUNNODE"].size() ; j++){
+        for(int j = 0 ; j < (int)(jobinfo["RUNNODE"].size()) ; j++){
             string req_node = jobinfo["RUNNODE"][j];
             Node node = Monitor::GetInstance()->getnodeinfo(req_node);
             message.msg["RUNNODEIP"].push_back(node.getnodeip());

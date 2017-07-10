@@ -3,16 +3,14 @@ CPPFLAGS := -Wall -O2
 INCLUDE := ../lib
 LIB := -lpthread
 SRCS := $(shell ls *.cpp)
-MODEL := ../lib/s_socket.o ../lib/c_socket.o ../lib/Message.o
 OBJS:=$(subst .cpp,.o,$(SRCS))
 RM:=rm -f
 
-all: mom clean
+.PHONY: lib
 
-mom: $(OBJS) $(MODEL)
-	@echo "------ Linking ------" && \
-	$(CC) $(CPPFLAGS) $(LIB) -I ${INCLUDE} $^ -o $@ && \
-	echo  "------ Success ------" || echo "------ Fail! ------"
+all: lib
+
+lib: $(OBJS)
 
 %.o: %.cpp
 	@echo "------ Compile >> " $^ "to" $@ && \

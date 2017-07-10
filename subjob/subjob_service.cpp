@@ -15,9 +15,9 @@ using json = nlohmann::json;
 void subjob_service::setenv_attrubute(Message *j){
     string env_need[]={"HOME","HOSTNAME","PATH","TZ","USER","MAIL","SHELL","LANG"};
 	char *envdata;
-	for(int i=0 ; i < sizeof(env_need)/sizeof(env_need[0]) ; i++)
+	for(int i=0 ; i < (int)(sizeof(env_need)/sizeof(env_need[0])) ; i++)
 	{
-		if( envdata = getenv(env_need[i].c_str()) ){
+		if( (envdata = getenv(env_need[i].c_str())) ){
 			j->msg["ENV"][env_need[i]] = envdata;
 		}
 	}
