@@ -14,7 +14,7 @@ int main(int argc, char **argv){
     }
     
     /*
-        建立一個要封裝給Server訊息的物件
+        *建立一個要封裝給Server訊息的物件*
     */
     Message newjob;
     newjob.initMessage();
