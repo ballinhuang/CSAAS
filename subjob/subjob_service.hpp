@@ -5,9 +5,10 @@
 #include<json.hpp>
 #include"Message.hpp"
 class subjob_service{
-    public:
+    private:
     void setenv_attrubute(Message*);
     void parse_script(Message*,std::string);
+    public:
     void creatjob(Message*,std::string);
 };
 
