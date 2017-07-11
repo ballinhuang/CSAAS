@@ -71,7 +71,8 @@ int cc_socket::connect2server(){
 }
 ```
 4. `hendshack`:收送端的socket協議本次傳送的訊息大小
-[^2] sendhendshack(int size):透過 write() 發送訊息大小[^2]
+> sendhendshack(int size):透過 write() 發送訊息大小
+{% endraw %}
 ```c++
 void cc_socket::sendhendshack(int size){
     char num[10];
@@ -79,7 +80,7 @@ void cc_socket::sendhendshack(int size){
     write(sock_fd,num,sizeof(num));
 }
 ```
-[^2] receivehendshack():透過 read() 接收訊息大小 並轉為INT回傳[^2]
+> receivehendshack():透過 read() 接收訊息大小 並轉為INT回傳
 ```c++
 int cc_socket::receivehendshack(){
     char num[10];
@@ -89,7 +90,7 @@ int cc_socket::receivehendshack(){
 }
 ```
 5. `send and receive`:接收與發送訊息至Server
-[^2] send(string msg)[^2]
+> send(string msg)
 ```c++
 void cc_socket::send(string msg){
     /*
@@ -109,7 +110,7 @@ void cc_socket::send(string msg){
     free(buf);
 }
 ```
-[^2] receive()[^2]
+> receive()
 ```c++
 string cc_socket::receive(){
     /*
@@ -218,7 +219,7 @@ int s_socket::acceptClinet(){
 }
 ```
 4. `hendshack` : 協議本次傳送的訊息大小 *原理同cc_socket*
-[^2] receivehendshack()[^2]
+> receivehendshack()
 ```c++
 int s_socket::receivehendshack(){
     char num[10];
@@ -227,7 +228,7 @@ int s_socket::receivehendshack(){
     return size;
 }
 ```
-[^2] sendhendshack()[^2]
+> sendhendshack()
 ```c++
 void s_socket::sendhendshack(int size){
     char num[10];
@@ -236,7 +237,7 @@ void s_socket::sendhendshack(int size){
 }
 ```
 5. `send and receive` : 傳送與接收訊息 *原理同cc_socket*
-[^2] readmessage()[^2]
+> readmessage()
 ```c++
 string s_socket::readmessage(){
     int size = receivehendshack();
@@ -250,7 +251,7 @@ string s_socket::readmessage(){
     return result;
 }
 ```
-[^2] sendmessage()[^2]
+> sendmessage()
 ```c++
 void s_socket::sendmessage(string msg){
     sendhendshack(msg.size());
@@ -371,7 +372,7 @@ int main()
 
 ## <a name="json"></a> json example
 
-[^2] Example[^2]
+> Example
 
 ```c++
 // create an empty structure (null)
@@ -399,7 +400,7 @@ j["list"] = { 1, 0, 2 };
 j["object"] = { {"currency", "USD"}, {"value", 42.99} };
 ```
 
-[^2] result[^2]
+> result
 
 ```javascript
 j = 
