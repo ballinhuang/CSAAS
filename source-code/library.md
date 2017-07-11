@@ -72,7 +72,6 @@ int cc_socket::connect2server(){
 ```
 4. `hendshack`:收送端的socket協議本次傳送的訊息大小
 > sendhendshack(int size):透過 write() 發送訊息大小
-{% endraw %}
 ```c++
 void cc_socket::sendhendshack(int size){
     char num[10];
