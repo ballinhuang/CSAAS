@@ -26,14 +26,6 @@ int s_socket::setConnection(string ip, string port){
         sock_fd = -3;
         return 0;
     }
-    /*
-    struct linger l_delay;
-    if (setsockopt(sock_fd, SOL_SOCKET, SO_LINGER, &l_delay, sizeof(struct linger)) == -1)
-    {
-        close(sock_fd);
-        sock_fd = -4;
-    }
-    */
 
     if(bind(sock_fd, (struct sockaddr *)&server_addr, sizeof(struct sockaddr)) == -1) {
         cout << "Server socket bind error !" << endl;
@@ -103,12 +95,3 @@ void s_socket::setacceptreuse(){
     int sockoptval = 1;
     setsockopt(conn_port, SOL_SOCKET, SO_REUSEADDR, (void *)&sockoptval, sizeof(sockoptval));
 }
-/*
-string s_socket::getClientIP(){
-    return to_string(client_addr.sin_addr.s_addr);
-}
-
-string s_socket::getClientPort(){
-    return to_string(client_addr.sin_port);
-}
-*/

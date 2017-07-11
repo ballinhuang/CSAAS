@@ -22,8 +22,3 @@ void Message::encode_Header(string sender, string receiver, string request){
     msg["RECEIVER"] = receiver;
     msg["REQUEST"] = request;
 }
-/*
-void job::addattirbute(string a,string b){
-    attribute.emplace(a,b);
-}
-*/

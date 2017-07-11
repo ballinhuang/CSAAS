@@ -12,7 +12,6 @@ class Message{
     void initMessage();
     std::string encode_Message();
     void encode_Header(std::string,std::string,std::string);
-    //void addattirbute(std::string,std::string);
     json msg;
 };
 
