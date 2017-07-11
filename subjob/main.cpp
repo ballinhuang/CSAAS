@@ -1,26 +1,27 @@
-#include<iostream>
-#include"Message.hpp"
-#include"cc_socket.hpp"
-#include"subjob_service.hpp"
+#include <iostream>
 #include <fstream>
 #include <string>
 
+#include "Message.hpp"
+#include "cc_socket.hpp"
+#include "subjob_service.hpp"
+
 using namespace std;
+
 int main(int argc, char **argv){
 
     string script_name;
-    
     if(argc > 0 && argv[1] != NULL){
         script_name = std::string(argv[1]);
     }
     else{
-        std::cout << "err: No input script file.\n";
+        cout << "Subjob ---> Error :No input script file." << endl;
         exit(1);
     }
     
     Message newjob;
     newjob.initMessage();
-    
+
     subjob_service srv;
     srv.creatjob(&newjob, script_name);
 
