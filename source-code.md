@@ -77,11 +77,12 @@ class subjob_service{
 2. `setenv_attrubute()`:封裝環境變數資料
 ```c++
 void subjob_service::setenv_attrubute(Message *j){
-    //陣列放置需要的環境變數
+    /*
+        陣列放置需要的環境變數
+    */
     string env_need[]={"HOME","HOSTNAME","PATH","TZ","USER","MAIL","SHELL","LANG"};
-	/*
+    /*
         for迴圈逐項讀取環境變數 並封裝到訊息中
-        封裝後結果範例: {"ENV":{"HOME":"/acs103","HOSTNAME":"lab02","USER":"acs103",.....}}
     */
     char *envdata;
 	for(int i=0 ; i < (int)(sizeof(env_need)/sizeof(env_need[0])) ; i++)
@@ -90,6 +91,18 @@ void subjob_service::setenv_attrubute(Message *j){
 			j->msg["ENV"][env_need[i]] = envdata;
 		}
 	}
+    /*
+        封裝後結果範例: 
+        {
+            "ENV":
+                {
+                    "HOME":"/acs103",
+                    "HOSTNAME":"lab02",
+                    "USER":"acs103",
+                    .....
+                }
+        }
+    */
 }
 ``` 
 
@@ -127,7 +140,10 @@ void subjob_service::parse_script(Message *j,string script_name){
         count++;
     }
     /*
-        結果範例:{"SCRIPT":["echo do","echo done"]}
+        封裝後結果範例:
+        {
+            "SCRIPT":["echo do","echo done"]
+        }
     */
 }
 ```
@@ -154,7 +170,19 @@ void subjob_service::creatjob(Message *j,string script_name){
     j->encode_Header(sender,receiver,request);
     /*
         最終結果訊息範例:
-        {"SENDER":"subjob","RECEIVER":"server","REQUEST":"newjob","SCRIPT":["echo do","echo done"],"ENV":{"HOME":"/acs103","HOSTNAME":"lab02","USER":"acs103",.....}}
+        {
+            "SENDER":"subjob",
+            "RECEIVER":"server",
+            "REQUEST":"newjob",
+            "SCRIPT":["echo do","echo done"],
+            "ENV":
+                {
+                    "HOME":"/acs103",
+                    "HOSTNAME":"lab02",
+                    "USER":"acs103",
+                    .....
+                }
+        }
     */
 }
 ```
