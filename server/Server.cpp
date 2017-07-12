@@ -34,7 +34,6 @@ void Server::set_scheduler_attr(string ip, string port){
 
 void Server::notify(int msg){
     // msg == 0 notitfy newjob, msg == 1 notitfy schedual finish
-    //sleep(1);
     if(msg == 0){
         if(debug > 0){
             if(debug == 1)
@@ -168,6 +167,7 @@ void Server::run(){
     int count =0;
     while(1){
         check_schedule();
+        do_schedual_tex.lock();
         if(do_schedual){
             next_schedule = now_time + sched_iteration;
             if(!schedual_busy){
@@ -179,7 +179,7 @@ void Server::run(){
                     count++;
                 }
                 if(contact_scheduler() == 1){
-                    do_schedual_tex.lock();
+                    
                     do_schedual = false;
                     do_schedual_tex.unlock();
                     schedual_busy_tex.lock();
@@ -199,7 +199,6 @@ void Server::run(){
                         else if(debug == 2)
                             cout << "Server run(): Contact_scheduler() fail." << endl;
                     }
-                    do_schedual_tex.lock();
                     do_schedual = false;
                     do_schedual_tex.unlock();
                 }
@@ -211,7 +210,6 @@ void Server::run(){
                     else if(debug == 2)
                         cout << "Server run(): Scheduler is busy." << endl;
                 }
-                do_schedual_tex.lock();
                 do_schedual = false;
                 do_schedual_tex.unlock();
             }

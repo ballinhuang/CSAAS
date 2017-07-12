@@ -31,7 +31,6 @@ class Server : public Observer{
         time_t next_schedule,now_time;
         std::mutex do_schedual_tex,schedual_busy_tex;
         std::string svr_ip,svr_port,sch_ip,sch_port;
-        //std::map<std::string,Node>;
 };
 
 #endif
