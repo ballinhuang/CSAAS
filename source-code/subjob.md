@@ -8,7 +8,7 @@
     - [cc_socket](./library.md#ccsocket)
 
 ## <a name = "main"></a> main
-```c++
+```cpp
 int main(int argc, char **argv){
 
     string script_name;
@@ -69,7 +69,7 @@ int main(int argc, char **argv){
 ## <a name = "subjobservice"></a> subjob_service
 
 1. `subjob_service.hpp` 概觀
-```c++
+```cpp
 class subjob_service{
     private:
     //setenv_attrubute 封裝環境變數資料
@@ -82,7 +82,7 @@ class subjob_service{
 };
 ```
 2. `setenv_attrubute()`:封裝環境變數資料
-```c++
+```cpp
 void subjob_service::setenv_attrubute(Message *j){
     /*
         陣列放置需要的環境變數
@@ -114,7 +114,7 @@ void subjob_service::setenv_attrubute(Message *j){
 ``` 
 
 3. `parse_script()`:將script檔案逐行parse到訊息中
-```c++
+```cpp
 void subjob_service::parse_script(Message *j,string script_name){
     /*
         透過stat() 可檢視是否能讀取該檔案
@@ -156,7 +156,7 @@ void subjob_service::parse_script(Message *j,string script_name){
 ```
 
 4. `creatjob()` :提供main函式要求封裝newjob訊息
-```c++
+```cpp
 void subjob_service::creatjob(Message *j,string script_name){
     /*
         step1: setenv_attrubute() -->封裝環境變數

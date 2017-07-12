@@ -17,7 +17,7 @@
 ## <a name="Socket"></a> Socket
 ### <a name="ccsocket"></a> cc_socket
 1. `cc_socket.hpp` 概觀
-```c++
+```cpp
 class cc_socket{
     public:
     int setConnection(std::string,std::string); // 設定client socket 的連線
@@ -38,7 +38,7 @@ class cc_socket{
 };
 ```
 2. `setConnection(std::string,std::string)`:設定client socket 的連線，傳入欲連線的server ip和port進行設定.
-```c++
+```cpp
 int cc_socket::setConnection(string ip, string port){
     server_addr.sin_addr.s_addr = inet_addr(ip.c_str());
     server_addr.sin_port = htons(stoi(port));
@@ -56,7 +56,7 @@ int cc_socket::setConnection(string ip, string port){
 }
 ```
 3. `connect2server()`:連線至Server端
-```c++
+```cpp
 int cc_socket::connect2server(){
     /*
         透過connect()連線至Server
@@ -72,7 +72,7 @@ int cc_socket::connect2server(){
 ```
 4. `hendshack`:收送端的socket協議本次傳送的訊息大小
 > sendhendshack(int size):透過 write() 發送訊息大小
-```c++
+```cpp
 void cc_socket::sendhendshack(int size){
     char num[10];
     sprintf(num,"%d",size);
@@ -80,7 +80,7 @@ void cc_socket::sendhendshack(int size){
 }
 ```
 > receivehendshack():透過 read() 接收訊息大小 並轉為INT回傳
-```c++
+```cpp
 int cc_socket::receivehendshack(){
     char num[10];
     read(sock_fd,num,sizeof(num));
@@ -90,7 +90,7 @@ int cc_socket::receivehendshack(){
 ```
 5. `send and receive`:接收與發送訊息至Server
 > send(string msg)
-```c++
+```cpp
 void cc_socket::send(string msg){
     /*
         step 1:透過 sendhendshack() 告知Server訊息大小
@@ -110,7 +110,7 @@ void cc_socket::send(string msg){
 }
 ```
 > receive()
-```c++
+```cpp
 string cc_socket::receive(){
     /*
         step 1:透過 receivehendshack() 接收訊息大小
@@ -133,7 +133,7 @@ string cc_socket::receive(){
 ```
 ### <a name="ssocket"></a> s_socket
 1. `s_socket.hpp` 概觀
-```c++
+```cpp
 class s_socket{
     public:
     int setConnection(std::string,std::string); // 設定Server socket
@@ -157,7 +157,7 @@ class s_socket{
 };
 ```
 2. `setConnection(std::string,std::string)`: 設定Server socket 
-```c++
+```cpp
 int s_socket::setConnection(string ip, string port){
 
     /*
@@ -201,7 +201,7 @@ int s_socket::setConnection(string ip, string port){
 }
 ```
 3. `int acceptClinet()` : 接受Client 連線
-```c++
+```cpp
 int s_socket::acceptClinet(){
     /*
         透過 accept() 接受 Client的連線 並將 accept 後所得的 file descriptor 存於 conn_port
@@ -219,7 +219,7 @@ int s_socket::acceptClinet(){
 ```
 4. `hendshack` : 協議本次傳送的訊息大小 *原理同cc_socket*
 > receivehendshack()
-```c++
+```cpp
 int s_socket::receivehendshack(){
     char num[10];
     read(conn_port,num,sizeof(num));
@@ -228,7 +228,7 @@ int s_socket::receivehendshack(){
 }
 ```
 > sendhendshack()
-```c++
+```cpp
 void s_socket::sendhendshack(int size){
     char num[10];
     sprintf(num,"%d",size);
@@ -237,7 +237,7 @@ void s_socket::sendhendshack(int size){
 ```
 5. `send and receive` : 傳送與接收訊息 *原理同cc_socket*
 > readmessage()
-```c++
+```cpp
 string s_socket::readmessage(){
     int size = receivehendshack();
     string result = "";
@@ -251,7 +251,7 @@ string s_socket::readmessage(){
 }
 ```
 > sendmessage()
-```c++
+```cpp
 void s_socket::sendmessage(string msg){
     sendhendshack(msg.size());
     char *buf = (char*)malloc(sizeof(char) * (msg.size()+1));
@@ -263,7 +263,7 @@ void s_socket::sendmessage(string msg){
 }
 ```
 6. `closebind()` : 關閉 socket 的綁定 使之能創立下一個socket接收其他連線
-```c++
+```cpp
 void s_socket::closebind(){
     /*
         透過 close() 將 sock_fd 關閉
@@ -272,7 +272,7 @@ void s_socket::closebind(){
 }
 ```
 7. `closeConnection()` : 關閉 socket 連線
-```c++
+```cpp
 void s_socket::closeConnection(){
     /*
         透過 close() 將 conn_port 關閉
@@ -281,7 +281,7 @@ void s_socket::closeConnection(){
 }
 ```
 8. `setacceptreuse()` : 使 accept() 的 socket file descriptor 可重用
-```c++
+```cpp
 void s_socket::setacceptreuse(){
     int sockoptval = 1;
     setsockopt(conn_port, SOL_SOCKET, SO_REUSEADDR, (void *)&sockoptval, sizeof(sockoptval));
@@ -293,7 +293,7 @@ void s_socket::setacceptreuse(){
 
 ## <a name="Message"></a> Message
 1. `Message.hpp` 概觀
-```c++
+```cpp
 #include<json.hpp>
 // for convenience
 using json = nlohmann::json;
@@ -307,20 +307,20 @@ class Message{
 };
 ```
 2. `initMessage()`: 初始化成員變數 msg
-```c++
+```cpp
 void Message::initMessage(){
     msg.clear();
 }
 ```
 3. `encode_Message()`: 將成員變數 msg 轉為 string 回傳
-```c++
+```cpp
 string Message::encode_Message(){
     string result = msg.dump();
     return result;
 }
 ```
 4. `encode_Header(std::string,std::string,std::string)` 封裝訊息標頭
-```c++
+```cpp
 void Message::encode_Header(string sender, string receiver, string request){
     msg["SENDER"] = sender;
     msg["RECEIVER"] = receiver;
@@ -339,7 +339,7 @@ void Message::encode_Header(string sender, string receiver, string request){
 ![ThreadPool](Thread_pool.png)
 
 > Example code
-```c++
+```cpp
 #include <iostream>
 #include <vector>
 #include <chrono>
@@ -373,7 +373,7 @@ int main()
 
 > Example
 
-```c++
+```cpp
 // create an empty structure (null)
 json j;
 
