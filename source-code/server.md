@@ -452,3 +452,322 @@ void Server::readrequest(s_socket *s, HandlerFactory *factory){
 }
 ```
 
+## <a name = "Monitor"></a> Monitor
+1. `Monitor.hpp` 概觀
+```cpp
+class Monitor{
+    /*
+        略過以上說明過的設計樣式的函式
+    */
+    public:
+        void addjob(json);              // request 要求新增工作時呼叫
+        void notitfyschedualfinish();   // 通知 Server 排程器已結束排程
+        json getjobstat();              // 取得 job queue 中的資訊
+        void setnodelist();             // 設定 nodelist 資料 讀取計算節點 的 IP 和 PORT
+        json getnodelist();             // 取得 計算節點的資料
+        void setjobtoready(int,std::string);    // 將指定工作排入 ready queue
+        void setjobtorunning(int,std::string);  // 將指定工作排入 running queue
+        Node getnodeinfo(std::string);          // 取得指定的計算節點資料
+        json getjobinfo(int);                   // 取得指定在 ready queue 中的 job 資訊
+    private:
+        std::map<std::string,Node> nodelist;    // 節點資料    
+        std::map<int,json> joblist;             // job queue 未排入執行的工作
+        std::map<int,json> readylist;           // ready queue 準備要執行的工作
+        std::map<int,json> runninglist;         // running queue 正在執行的工作
+        std::map<int,json> completelist;        // complete queue 已完成的工作
+        /*
+            用於防止多線程同時更改資料的保護鎖
+        */
+        std::mutex jobtex;
+        std::mutex readytex;
+        std::mutex runningtex;
+        int jobcount = 0;       // 用於 job 的命名
+        void notitfynewjob();   // 通知 Server 有新工作排入
+};
+```
+
+## <a name = "Node"></a> Node
+> 主要只用來存取計算節點的資訊，IP PORT NAME
+> 未來可能還會有 CPU 核心數
+```cpp
+class Node{
+    public:
+    std::string getnodeip();
+    std::string getnodeport();
+    std::string getnodename();
+    
+    void setnodeip(std::string);
+    void setnodeport(std::string);
+    void setnodename(std::string);
+    
+    private:
+    std::string nodeip,nodeport,nodename;
+};
+
+string Node::getnodeip(){
+    return nodeip;
+}
+
+string Node::getnodeport(){
+    return nodeport;
+}
+
+string Node::getnodename(){
+    return nodename;
+}
+
+void Node::setnodeip(string ip){
+    nodeip = ip;
+}
+
+void Node::setnodeport(string port){
+    nodeport = port;
+}
+
+void Node::setnodename(string name){
+    nodename = name;
+}
+```
+
+## <a name = "Handler"></a> Handler
+> 所有的 Handler 皆繼承 IHandler 介面 皆需要實作 handle() 函式 如以下所示
+```cpp
+class NewJobHandler : public IHandler{
+    public:
+    NewJobHandler(json,s_socket*);
+    void handle();
+    private:
+    json new_job;
+    s_socket *s;
+};
+```
+> 以下列舉目前有的 Handler 
+1. `NewJobHandler` : 用於處理新增工作
+```cpp
+NewJobHandler::NewJobHandler(json job, s_socket *socket){
+    new_job = job;
+    s = socket;
+}
+
+void NewJobHandler::handle(){
+    // 將 JOB 透過 Monitor 新增入 joblist 中
+    Monitor::GetInstance()->addjob(new_job);
+}
+```
+2. `QueueStateHandler` :　用於處理回應 joblist 資訊 (排程器向Server要求Job queue中的資料)
+```cpp
+QueueStateHandler::QueueStateHandler(json request, s_socket *socket){
+    s = socket;
+    req_queue_state = request;
+}
+
+void QueueStateHandler::handle(){
+    Message queuestate;
+    /*
+        step 1:透過 Monitor 取得 joblist 中的資訊
+        step 2:封裝訊息標頭
+        step 3:透過 socket 回應資料
+    */
+    queuestate.msg = Monitor::GetInstance()->getjobstat();
+    queuestate.encode_Header("server","scheduler","queuestate");
+    s->sendmessage(queuestate.encode_Message());
+}
+```
+3. `NodeStateHandler` : 用於處理回應 nodelist 資訊 (排程器向Server要求計算節點的資料)
+```cpp
+NodeStateHandler::NodeStateHandler(json request, s_socket *socket){
+    s = socket;
+    req_node_state = request;
+}
+
+void NodeStateHandler::handle(){
+    Message nodestate;
+    /*
+        step 1:透過 Monitor 取得 nodelist 中的資訊
+        step 2:封裝訊息標頭
+        step 3:透過 socket 回應資料
+    */
+    nodestate.msg = Monitor::GetInstance()->getnodelist();
+    nodestate.encode_Header("server","scheduler","nodestate");
+    s->sendmessage(nodestate.encode_Message());
+}
+```
+
+4. `RunJobHandler` : 排程器排程結束後 要求Server 本次要執行的工作
+```cpp
+
+RunJobHandler::RunJobHandler(json req_run, s_socket *socket){
+    req_runjob = req_run;
+    s = socket;
+}
+
+void RunJobHandler::handle(){
+    /*
+        step 1:先將所有的指定的要執行的 job 放進 ready queue中
+        要求的訊息如以下所示
+        {
+            "JOBID" : [0,0,1]
+            "NODENAME" : [lab01,lab02,lab02]
+        }
+        此訊息代表 工作 0 需要 run 在 lab01,lab02 上
+                  工作 1 需要 run 在 lab02 上
+    */
+    int task_count;
+    if(req_runjob.count("JOBID") != 0){
+        task_count = req_runjob["TASKCOUNT"].get<int>();
+        for(int i = 0 ; i < task_count ; i++){
+            Monitor::GetInstance()->setjobtoready(req_runjob["JOBID"][i].get<int>(),req_runjob["NODENAME"][i].get<std::string>());
+        }
+    }
+    else
+    {
+        /*
+            如果沒有工作要求 則通知排程器結束排程
+            並結束處理
+        */
+        Monitor::GetInstance()->notitfyschedualfinish();
+        return;
+    }
+    // 通知排程結束
+    Monitor::GetInstance()->notitfyschedualfinish();
+    
+    // 迴圈 尋訪本次排程要求要執行的工作
+    for(int i = 0 ; i < task_count ; i++){
+        /*
+            查看該工作是否有在 ready queue 中 如果沒有 代表已經在執行 尋訪下一個
+        */
+        json jobinfo = Monitor::GetInstance()->getjobinfo(req_runjob["JOBID"][i].get<int>());
+        
+        if(jobinfo == NULL){
+            continue;
+        }
+
+        /*
+            建立一個 client 端 socket
+        */
+        c_socket socket;
+        Message message;
+        message.msg = jobinfo;
+
+        /*
+            迴圈尋訪該工作要run 在那些計算節點上
+        */
+        for(int j = 0 ; j < (int)(jobinfo["RUNNODE"].size()) ; j++){
+            string req_node = jobinfo["RUNNODE"][j];
+            /*
+                取得該節點資訊
+            */
+            Node node = Monitor::GetInstance()->getnodeinfo(req_node);
+            
+            /*
+                和該節點進行連線
+            */
+            if(socket.setConnection(node.getnodeip(),node.getnodeport()) == 0){
+                if(debug > 0){
+                    if(debug == 1)
+                        *debug_file << "RunJobHandler handle(): setConnection() ERROR! " << endl;
+                    else if(debug == 2)
+                        cout << "RunJobHandler handle(): setConnection() ERROR! " << endl;
+                }
+                continue;
+            }
+            if(socket.connect2server() == 0){
+                if(debug > 0){
+                    if(debug == 1)
+                        *debug_file << "RunJobHandler handle(): connect2server() ERROR! " << endl;
+                    else if(debug == 2)
+                        cout << "RunJobHandler handle(): connect2server() ERROR! " << endl;
+                }
+                continue;
+            }
+            
+            /*
+                如果連線成功 則設置該節點為 MOTHERNODE 跳出迴圈
+            */
+            message.msg["MOTHERNODE"] = node.getnodename();
+            break;
+        }
+
+        /*
+            如果連線不到任何節點 繼續下一個工作的尋訪
+            未來要設置能讓該工作 塞回 job queue 等待
+        */
+        if(message.msg.count("MOTHERNODE") == 0){
+            // push_font to the joblist ??
+            continue;
+        }
+            
+        /*
+            將其他的所有要執行的節點資料封裝入訊息中
+            讓 MOTHERNODE 可再告知其他節點要執行工作
+        */
+        for(int j = 0 ; j < (int)(jobinfo["RUNNODE"].size()) ; j++){
+            string req_node = jobinfo["RUNNODE"][j];
+            Node node = Monitor::GetInstance()->getnodeinfo(req_node);
+            message.msg["RUNNODEIP"].push_back(node.getnodeip());
+            message.msg["RUNNODEPORT"].push_back(node.getnodeport());
+        }
+        
+        /*
+            封裝訊息標頭
+        */
+        message.encode_Header("server","mom","runjob");
+        /*
+            訊息結果範例:
+            {
+                "SENDER":"server",
+                "RECEIVER":"mom",
+                "REQUEST":"runjob",
+                "SCRIPT":["echo do","echo done"],
+                "ENV":
+                    {
+                        "HOME":"/acs103",
+                        "HOSTNAME":"lab02",
+                        "USER":"acs103",
+                        .....
+                    }
+                "MOTHERNODE" : "lab01",
+                "RUNNODE" : ["lab01","lab02"],
+                "RUNNODEIP" : ["127.0.0.1","127.0.0.2"],
+                "RUNNODEPORT" : ["5003","5004d"]
+            }
+        */
+        socket.send(message.encode_Message());
+        socket.closeConnection();
+        /*
+            將 ready queue 中 該工作排入 running queue中，並告知 mothor node
+        */
+        Monitor::GetInstance()->setjobtorunning(req_runjob["JOBID"][i].get<int>(),message.msg["MOTHERNODE"].get<string>());
+    }
+}
+```
+
+## <a name = "HandlerFactory"></a> HandlerFactory : 根據不同的 request 給予對應的 Handler
+
+```cpp
+IHandler *HandlerFactory::getHandler(json request,s_socket *s)
+{
+    /*
+        根據不一樣的 request 訊息 return 對應的 Handler
+    */
+    //NewJobHandler
+    if(request["SENDER"].get<std::string>()   == "subjob"       &&
+       request["RECEIVER"].get<std::string>() == "server"       && 
+       request["REQUEST"].get<std::string>()  == "newjob"){
+        return new NewJobHandler(request,s);
+    }
+    //NewJobHandler
+
+    //RunJobHandler
+    if(request["SENDER"].get<std::string>()   == "scheduler"    &&
+       request["RECEIVER"].get<std::string>() == "server"       && 
+       request["REQUEST"].get<std::string>()  == "runjob"){
+        return new RunJobHandler(request,s);
+    }
+    //RunJobHandler
+
+    //ERROR
+    
+    return NULL;
+}
+```

@@ -85,7 +85,7 @@ void RunJobHandler::handle(){
 
         if(message.msg.count("MOTHERNODE") == 0){
             // push_font to the joblist ??
-            return;
+            continue;
         }
             
 

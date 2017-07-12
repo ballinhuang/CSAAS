@@ -22,7 +22,7 @@ class Monitor{
         Observer *observer;
         //holds one and only object of Moniter
         Monitor(){
-            jobtex.unlock();
+            //jobtex.unlock();
         };// private constructor
     
     //data
