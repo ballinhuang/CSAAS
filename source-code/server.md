@@ -651,6 +651,9 @@ void RunJobHandler::handle(){
 
         /*
             迴圈尋訪該工作要run 在那些計算節點上
+            備註: 以後可能不會進行尋訪 會採用如turque的方式 只訪問第一個節點
+                  直接送至 第一個節點上
+                  如果失敗就不送 將工作塞回 job queue
         */
         for(int j = 0 ; j < (int)(jobinfo["RUNNODE"].size()) ; j++){
             string req_node = jobinfo["RUNNODE"][j];
@@ -660,24 +663,12 @@ void RunJobHandler::handle(){
             Node node = Monitor::GetInstance()->getnodeinfo(req_node);
             
             /*
-                和該節點進行連線
+                和該節點進行連線 如果有失敗 則尋訪下一個節點
             */
             if(socket.setConnection(node.getnodeip(),node.getnodeport()) == 0){
-                if(debug > 0){
-                    if(debug == 1)
-                        *debug_file << "RunJobHandler handle(): setConnection() ERROR! " << endl;
-                    else if(debug == 2)
-                        cout << "RunJobHandler handle(): setConnection() ERROR! " << endl;
-                }
                 continue;
             }
             if(socket.connect2server() == 0){
-                if(debug > 0){
-                    if(debug == 1)
-                        *debug_file << "RunJobHandler handle(): connect2server() ERROR! " << endl;
-                    else if(debug == 2)
-                        cout << "RunJobHandler handle(): connect2server() ERROR! " << endl;
-                }
                 continue;
             }
             
