@@ -24,8 +24,8 @@ $ vim scheduler.con
 <scheduler's ip> <scheduler's port>
 
 $ vim node.con
-<node1's ip> <node1's port> <node1's name>
-<node2's ip> <node2's port> <node2's name>
+<node1's ip> <node1's port> <node1's name> <node1's core>
+<node2's ip> <node2's port> <node2's name> <node2's core>
 ...
 
 ```

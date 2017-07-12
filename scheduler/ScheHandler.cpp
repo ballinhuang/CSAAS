@@ -70,20 +70,11 @@ void FIFOScheHandler::handleschedule(){
             else if(debug == 2)
                 cout << "Scheduler ---> FIFOScheHandler handleschedule(): Start Scheduling." << endl;
         }
-        int jobcount = queuestate["JOBCOUNT"].get<int>();
-        int nodecount = nodestate["NODECOUNT"].get<int>();
 
-        if(debug > 0){
-            if(debug == 1)
-                *debug_file << "Scheduler ---> jobcount = " << jobcount << " nodecount = " << nodecount << endl;
-            else if(debug == 2)
-                cout << "Scheduler ---> jobcount = " << jobcount << " nodecount = " << nodecount << endl;
-        }
-
-        for(int i = 0 ; i < jobcount ; i++){
-            for(int j = 0; j < nodecount ; j++){
+        for(int i = 0 ; i < (int)queuestate["JOBID"].size() ; i++){
+            for(int j = 0; j < (int)nodestate["NODES"].size() ; j++){
                 req_runjob.msg["JOBID"][i] = queuestate["JOBID"][i];
-                req_runjob.msg["NODENAME"][i] = nodestate["NODENAME"][j];
+                req_runjob.msg["NODENAME"][i] = nodestate["NODES"][j][1];
                 if(debug > 0){
                     if(debug == 1)
                         *debug_file << "Scheduler ---> Assin " << req_runjob.msg["JOBID"][i] << " to " << req_runjob.msg["NODENAME"][i] << endl;
@@ -92,10 +83,10 @@ void FIFOScheHandler::handleschedule(){
                 }
                 i++;
                 req_runjob.msg["TASKCOUNT"] = i;
-                if(i >= jobcount)
+                if(i >= (int)queuestate["JOBID"].size())
                     break;
             }
-            if(i >= jobcount)
+            if(i >= (int)queuestate["JOBID"].size())
                 break;
             i--;
         }

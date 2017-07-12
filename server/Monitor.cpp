@@ -109,39 +109,7 @@ json Monitor::getjobstat(){
         i++;
     }
     jobtex.unlock();
-    result["JOBCOUNT"] = i;
     return result;
-}
-
-void Monitor::setnodelist(){
-    ifstream nodes_fd;
-    nodes_fd.open("node.con");
-    string ip,port,name;
-    //error concern
-    while( nodes_fd >> ip >> port >> name){
-        Node node;
-        node.setnodeip(ip);
-        node.setnodeport(port);
-        node.setnodename(name);
-        nodelist[name] = node;
-    }
-}
-
-json Monitor::getnodelist(){
-    json result;
-    int i = 0;
-    for(map<string,Node>::iterator it = nodelist.begin() ; it != nodelist.end() ; it++){
-        result["NODENAME"][i] = it->second.getnodename();
-        result["NODEIP"][i] = it->second.getnodeip();
-        result["NODEPORT"][i] = it->second.getnodeport();
-        i++;
-    }
-    result["NODECOUNT"] = i;
-    return result;
-}
-
-Node Monitor::getnodeinfo(string nodename){
-    return nodelist[nodename];
 }
 
 json Monitor::getjobinfo(int jobid){
@@ -156,4 +124,37 @@ json Monitor::getjobinfo(int jobid){
     result = iter->second;
     readytex.unlock();
     return result;
+}
+
+void Monitor::setnodelist(){
+    ifstream nodes_fd;
+    nodes_fd.open("node.con");
+    string ip,port,name;
+    int core;
+    //error concern
+    while( nodes_fd >> ip >> port >> name >> core){
+        Node node;
+        node.setnodeip(ip);
+        node.setnodeport(port);
+        node.setnodename(name);
+        node.setCPUcore(core);
+        nodelist[name] = node;
+    }
+}
+
+json Monitor::getnodelist(){
+    json result;
+    int i = 0;
+    for(map<string,Node>::iterator it = nodelist.begin() ; it != nodelist.end() ; it++){
+        result["NODES"][i][1] = it->second.getnodename();
+        //result["NODES"][i][2] = it->second.getnodeip();
+        //result["NODES"][i][3] = it->second.getnodeport();
+        result["NODES"][i][2] = it->second.getnodeCPUcore();
+        i++;
+    }
+    return result;
+}
+
+Node Monitor::getnodeinfo(string nodename){
+    return nodelist[nodename];
 }
