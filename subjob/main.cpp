@@ -15,7 +15,7 @@ int main(int argc, char **argv){
         script_name = std::string(argv[1]);
     }
     else{
-        cout << "Subjob ---> Error :No input script file." << endl;
+        cout << "Subjob ---> main(): Error! No input script file." << endl;
         exit(1);
     }
     
@@ -25,11 +25,18 @@ int main(int argc, char **argv){
     subjob_service srv;
     srv.creatjob(&newjob, script_name);
 
-    ifstream f("subjob.con");
     string ip,port;
-    f >> ip;
-    f >> port;
-
+    ifstream f;
+    f.open("subjob.con");
+    if (f.is_open()){
+        f >> ip;
+        f >> port;
+    }
+    else{
+        cout << "Subjob ---> main(): Error! subjob.con not found." << endl;
+        exit(1);
+    }
+    
     cc_socket csock;
     if(csock.setConnection(ip,port) != 1 ){
         exit(1);
@@ -37,6 +44,7 @@ int main(int argc, char **argv){
     if(csock.connect2server() != 1 ){
         exit(1);
     }
+
     csock.send(newjob.encode_Message());
     csock.closeConnection();
 

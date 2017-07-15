@@ -1,4 +1,4 @@
-#include"subjob_service.hpp"
+#include "subjob_service.hpp"
 #include <iostream>
 #include <cstdio>
 #include <cstdlib>
@@ -7,13 +7,25 @@
 #include <unistd.h>
 #include <fstream>
 #include <string>
+#include <sstream>
 
 using namespace std;
 // for convenience
 using json = nlohmann::json;
 
+string subjob_service::trim(const string& str)
+{
+    size_t first = str.find_first_not_of(' ');
+    if (string::npos == first){
+        return str;
+    }
+    size_t last = str.find_last_not_of(' ');
+    return str.substr(first, (last - first + 1));
+}
+
 void subjob_service::setenv_attrubute(Message *j){
-    string env_need[]={"HOME","HOSTNAME","PATH","TZ","USER","MAIL","SHELL","LANG"};
+    //string env_need[]={"HOME","HOSTNAME","PATH","TZ","USER","SHELL"};
+    string env_need[]={"HOME","HOSTNAME","PATH","USER"};
 	char *envdata;
 	for(int i=0 ; i < (int)(sizeof(env_need)/sizeof(env_need[0])) ; i++)
 	{
@@ -26,12 +38,12 @@ void subjob_service::setenv_attrubute(Message *j){
 void subjob_service::parse_script(Message *j,string script_name){
     struct stat statbuf;
     if (stat(script_name.c_str(), &statbuf) < 0){
-        std::cout << "err: script file cannot be loaded\n";
+        cout << "Subjob ---> parse_script(): ERROR! Script file cannot be loaded." << endl;
         exit(1);
     }
 
     if (!S_ISREG(statbuf.st_mode)){
-        cout <<"err: script not a file\n";
+        cout << "Subjob ---> parse_script(): ERROR! Script not a file." << endl;
         exit(1);
     }
 
@@ -39,8 +51,45 @@ void subjob_service::parse_script(Message *j,string script_name){
     string line;
     int count = 0;
     while(getline(f,line)){
-        j->msg["SCRIPT"][count] = line;
-        count++;
+        line = trim(line);
+        stringstream ss;
+        ss << line;
+        string set;
+        ss >> set;
+        if(set.compare("#SET") == 0){
+            while( ss >> set ){
+                if( set.compare("-N") == 0 ){
+                    if( j->msg.count("NODENEED") == 0){
+                        int nodeneed;
+                        ss >> nodeneed;
+                        j->msg["NODENEED"] = nodeneed;
+                    }
+                    else{
+                        cout << "Subjob ---> parse_script(): ERROR! SET multiple -N." << endl;
+                        exit(1);
+                    }
+                }
+                else if( set.compare("-P") == 0 ){
+                    if( j->msg.count("NPNEED") == 0){
+                        int npneed;
+                        ss >> npneed;
+                        j->msg["NPNEED"] = npneed;
+                    }
+                    else{
+                        cout << "Subjob ---> parse_script(): ERROR! SET multiple -P." << endl;
+                        exit(1);
+                    }
+                }
+                else{
+                    cout << "Subjob ---> parse_script(): ERROR! SET command wrong." << endl;
+                    exit(1);
+                }
+            }
+        }
+        else{
+            j->msg["SCRIPT"][count] = line;
+            count++;
+        }
     }
 }
 

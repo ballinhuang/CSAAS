@@ -74,7 +74,7 @@ void FIFOScheHandler::handleschedule(){
         for(int i = 0 ; i < (int)queuestate["JOBID"].size() ; i++){
             for(int j = 0; j < (int)nodestate["NODES"].size() ; j++){
                 req_runjob.msg["JOBID"][i] = queuestate["JOBID"][i];
-                req_runjob.msg["NODENAME"][i] = nodestate["NODES"][j][1];
+                req_runjob.msg["NODENAME"][i] = nodestate["NODES"][j][0];
                 if(debug > 0){
                     if(debug == 1)
                         *debug_file << "Scheduler ---> Assin " << req_runjob.msg["JOBID"][i] << " to " << req_runjob.msg["NODENAME"][i] << endl;

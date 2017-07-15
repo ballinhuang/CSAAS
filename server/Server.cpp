@@ -214,6 +214,9 @@ void Server::run(){
                 do_schedual_tex.unlock();
             }
         }
+        else{
+            do_schedual_tex.unlock();
+        }
     }
 }
 

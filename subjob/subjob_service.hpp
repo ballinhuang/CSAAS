@@ -8,6 +8,7 @@ class subjob_service{
     private:
     void setenv_attrubute(Message*);
     void parse_script(Message*,std::string);
+    std::string trim(const std::string&);
     public:
     void creatjob(Message*,std::string);
 };

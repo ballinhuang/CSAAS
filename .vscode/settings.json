@@ -1,0 +1,12 @@
+{
+    "files.associations": {
+        "iosfwd": "cpp",
+        "xlocbuf": "cpp",
+        "queue": "cpp",
+        "iostream": "cpp",
+        "xstring": "cpp",
+        "string": "cpp",
+        "utility": "cpp",
+        "fstream": "cpp"
+    }
+}
