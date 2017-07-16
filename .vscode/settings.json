@@ -7,6 +7,11 @@
         "xstring": "cpp",
         "string": "cpp",
         "utility": "cpp",
-        "fstream": "cpp"
+        "fstream": "cpp",
+        "xlocmes": "cpp",
+        "xlocale": "cpp",
+        "deque": "cpp",
+        "vector": "cpp",
+        "xtree": "cpp"
     }
 }

@@ -18,6 +18,9 @@ NewJobHandler::NewJobHandler(json job, s_socket *socket){
 }
 
 void NewJobHandler::handle(){
+    new_job.erase("SENDER");
+    new_job.erase("RECEIVER");
+    new_job.erase("REQUEST");
     Monitor::GetInstance()->addjob(new_job);
 }
 
@@ -63,18 +66,18 @@ void RunJobHandler::handle(){
             if(socket.setConnection(node.getnodeip(),node.getnodeport()) == 0){
                 if(debug > 0){
                     if(debug == 1)
-                        *debug_file << "RunJobHandler handle(): setConnection() ERROR! " << endl;
+                        *debug_file << "Server ---> RunJobHandler handle(): setConnection() ERROR! " << endl;
                     else if(debug == 2)
-                        cout << "RunJobHandler handle(): setConnection() ERROR! " << endl;
+                        cout << "Server ---> RunJobHandler handle(): setConnection() ERROR! " << endl;
                 }
                 continue;
             }
             if(socket.connect2server() == 0){
                 if(debug > 0){
                     if(debug == 1)
-                        *debug_file << "RunJobHandler handle(): connect2server() ERROR! " << endl;
+                        *debug_file << "Server ---> RunJobHandler handle(): connect2server() ERROR! " << endl;
                     else if(debug == 2)
-                        cout << "RunJobHandler handle(): connect2server() ERROR! " << endl;
+                        cout << "Server ---> RunJobHandler handle(): connect2server() ERROR! " << endl;
                 }
                 continue;
             }
@@ -100,9 +103,9 @@ void RunJobHandler::handle(){
         message.encode_Header("server","mom","runjob");
         if(debug > 0){
             if(debug == 1)
-                *debug_file << "RunJobHandler handle(): the message send to mom = " << endl << message.encode_Message() << endl;
+                *debug_file << "Server ---> RunJobHandler handle(): the message send to mom = " << endl << message.encode_Message() << endl;
             else if(debug == 2)
-                cout << "RunJobHandler handle(): the message send to mom = " << endl << message.encode_Message() << endl;
+                cout << "Server ---> RunJobHandler handle(): the message send to mom = " << endl << message.encode_Message() << endl;
         }
         socket.send(message.encode_Message());
         socket.closeConnection();

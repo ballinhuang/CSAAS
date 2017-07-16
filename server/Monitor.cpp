@@ -45,8 +45,8 @@ void Monitor::addjob(json newjob){
     newjob["JOBSTAT"] = "WAITE";
     joblist[jobcount] = newjob;
     jobcount++;
-    notitfynewjob();
     jobtex.unlock();
+    notitfynewjob();
 }
 
 void Monitor::setjobtoready(int jobid, string node){
@@ -70,9 +70,9 @@ void Monitor::setjobtoready(int jobid, string node){
     }
     if(debug > 0){
         if(debug == 1)
-            *debug_file << "Monitor setjobtoready(): Move job to ready queue  jobid = " << jobid << " content = " << readylist[jobid].dump() << endl;
+            *debug_file << "Server ---> Monitor setjobtoready(): Move job to ready queue  jobid = " << jobid << " content = " << readylist[jobid].dump() << endl;
         else if(debug == 2)
-            cout << "Monitor setjobtoready(): Move job to ready queue  jobid = " << jobid << " content = " << readylist[jobid].dump() << endl;
+            cout << "Server ---> Monitor setjobtoready(): Move job to ready queue  jobid = " << jobid << " content = " << readylist[jobid].dump() << endl;
     }
 }
 
@@ -94,9 +94,9 @@ void Monitor::setjobtorunning(int jobid,string mothor){
     
     if(debug > 0){
         if(debug == 1)
-            *debug_file << "Monitor setjobtorunning(): Move job to running queue  jobid = " << jobid << " content = " << runninglist[jobid].dump() << endl;
+            *debug_file << "Server ---> Monitor setjobtorunning(): Move job to running queue  jobid = " << jobid << " content = " << runninglist[jobid].dump() << endl;
         else if(debug == 2)
-            cout << "Monitor setjobtorunning(): Move job to running queue  jobid = " << jobid << " content = " << runninglist[jobid].dump() << endl;
+            cout << "Server ---> Monitor setjobtorunning(): Move job to running queue  jobid = " << jobid << " content = " << runninglist[jobid].dump() << endl;
     }
 }
 
@@ -106,6 +106,18 @@ json Monitor::getjobstat(){
     int i = 0;
     for(map<int,json>::iterator it = joblist.begin() ; it != joblist.end() ; it++){
         result["JOBID"][i] = (it->second)["JOBID"];
+        if((it->second).count("NODENEED") == 1){
+            result["NODENEED"][i] = (it->second)["NODENEED"];
+        }
+        else{
+            result["NODENEED"][i] = 0;
+        }
+        if((it->second).count("NPNEED") == 1){
+            result["NPNEED"][i] = (it->second)["NPNEED"];
+        }
+        else{
+            result["NPNEED"][i] = 0;
+        }
         i++;
     }
     jobtex.unlock();
@@ -129,16 +141,21 @@ json Monitor::getjobinfo(int jobid){
 void Monitor::setnodelist(){
     ifstream nodes_fd;
     nodes_fd.open("node.con");
-    string ip,port,name;
-    int core;
-    //error concern
-    while( nodes_fd >> ip >> port >> name >> core){
-        Node node;
-        node.setnodeip(ip);
-        node.setnodeport(port);
-        node.setnodename(name);
-        node.setCPUcore(core);
-        nodelist[name] = node;
+    if(nodes_fd.is_open()){
+        string ip,port,name;
+        int core;
+        while( nodes_fd >> ip >> port >> name >> core){
+            Node node;
+            node.setnodeip(ip);
+            node.setnodeport(port);
+            node.setnodename(name);
+            node.setCPUcore(core);
+            nodelist[name] = node;
+        }
+    }
+    else{
+        cout << "Server ---> main(): Error! node.con not found." << endl;
+        exit(1);
     }
 }
 
@@ -147,8 +164,6 @@ json Monitor::getnodelist(){
     int i = 0;
     for(map<string,Node>::iterator it = nodelist.begin() ; it != nodelist.end() ; it++){
         result["NODES"][i][0] = it->second.getnodename();
-        //result["NODES"][i][2] = it->second.getnodeip();
-        //result["NODES"][i][3] = it->second.getnodeport();
         result["NODES"][i][1] = it->second.getnodeCPUcore();
         i++;
     }

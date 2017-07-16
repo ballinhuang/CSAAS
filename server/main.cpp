@@ -15,7 +15,7 @@ int main(int argc, char **argv){
     
     if(argc > 1){
         string arg;
-        arg = std::string(argv[1]);
+        arg = string(argv[1]);
         if(arg == "-fdebug"){
             debug = 1;
             debug_file = new ofstream();
@@ -24,35 +24,48 @@ int main(int argc, char **argv){
         else if(arg == "-odebug"){
             debug = 2;
         }
+        else{
+            cout << "Server ---> main(): Error command ("<< arg << ") !" << endl;
+            exit(1);
+        }
     }
 
     ifstream f("server.con");
     string server_ip,server_port;
-    f >> server_ip;
-    f >> server_port;
+    if(f.is_open()){
+        f >> server_ip;
+        f >> server_port;
+    }
+    else{
+        cout << "Server ---> main(): Error! server.con not found." << endl;
+        exit(1);
+    }
     f.close();
     f.open("scheduler.con");
     string scheduler_ip,scheduler_port;
-    f >> scheduler_ip;
-    f >> scheduler_port;
+    if(f.is_open()){
+        f >> scheduler_ip;
+        f >> scheduler_port;
+    }
+    else{
+        cout << "Server ---> main(): Error! scheduler.con not found." << endl;
+        exit(1);
+    }
     f.close();
-    pid_t pid= fork();
-	if(pid == -1) {
-    	cout << "server fork error !" << endl;
-        exit(EXIT_FAILURE);
-    }
-    else if(pid != 0) {
-        if(debug > 0){
-            if(debug == 1)
-                *debug_file << "shut down parent !" << endl;
-            else if(debug == 2)
-                cout << "shut down parent !" << endl;
-        }
-    	return 0;
-    }
+
     //creat Server and Monitor , attach Server to Monitor.
     Monitor::GetInstance()->setnodelist();
     Server server(Monitor::GetInstance());
+
+    pid_t pid= fork();
+	if(pid < 0) {
+    	cout << "Server ---> main(): Fork Error !" << endl;
+        exit(1);
+    }
+    else if(pid != 0) {
+    	return 0;
+    }
+    
     server.set_server_attr(server_ip,server_port);
     server.set_scheduler_attr(scheduler_ip,scheduler_port);
     server.run();

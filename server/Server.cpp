@@ -15,9 +15,9 @@ extern ofstream *debug_file;
 Server::Server(Monitor *m){
     if(debug > 0){
         if(debug == 1)
-            *debug_file << "Server Server(): Attach to monitor" << endl;
+            *debug_file << "Server ---> Server(): Attach to monitor" << endl;
         else if(debug == 2)
-            cout << "Server Server(): Attach to monitor" << endl;
+            cout << "Server ---> Server(): Attach to monitor" << endl;
     }
     m->attachserver(this);
 }
@@ -37,9 +37,9 @@ void Server::notify(int msg){
     if(msg == 0){
         if(debug > 0){
             if(debug == 1)
-                *debug_file << "Server notify(0): Receive new job!" << endl;
+                *debug_file << "Server ---> Server notify(0): Receive new job!" << endl;
             else if(debug == 2)
-                cout << "Server notify(0): Receive new job!" << endl;
+                cout << "Server ---> Server notify(0): Receive new job!" << endl;
         }
         do_schedual_tex.lock();
         do_schedual = true;
@@ -48,9 +48,9 @@ void Server::notify(int msg){
     else if(msg == 1){
         if(debug > 0){
             if(debug == 1)
-                *debug_file << "Server notify(1): Schedualer finish schedual!" << endl;
+                *debug_file << "Server ---> Server notify(1): Schedualer finish schedual!" << endl;
             else if(debug == 2)
-                cout << "Server notify(1): Schedualer finish schedual!" << endl;
+                cout << "Server ---> Server notify(1): Schedualer finish schedual!" << endl;
         }
         schedual_busy_tex.lock();
         schedual_busy = false;
@@ -61,18 +61,18 @@ void Server::notify(int msg){
 void Server::attach_success(){
     if(debug > 0){
         if(debug == 1)
-            *debug_file << "Server attach_success():Attach success." << endl;
+            *debug_file << "Server ---> Server attach_success():Attach success." << endl;
         else if(debug == 2)
-            cout << "Server attach_success():Attach success." << endl;
+            cout << "Server ---> Server attach_success():Attach success." << endl;
     }
 }
 
 void Server::readrequest(s_socket *s, HandlerFactory *factory){
     if(debug > 0){
         if(debug == 1)
-            *debug_file << "Server readrequest():Start read request." << endl;
+            *debug_file << "Server ---> Server readrequest():Start read request." << endl;
         else if(debug == 2)
-            cout << "Server readrequest():Start read request." << endl;
+            cout << "Server ---> Server readrequest():Start read request." << endl;
     }
     
     while( 1 ){
@@ -83,9 +83,9 @@ void Server::readrequest(s_socket *s, HandlerFactory *factory){
         }
         if(debug > 0){
             if(debug == 1)
-                *debug_file << "Server readrequest():Receive request = " << endl << res << endl;
+                *debug_file << "Server ---> Server readrequest():Receive request = " << endl << res << endl;
             else if(debug == 2)
-                cout << "Server readrequest():Receive request = " << endl << res << endl;
+                cout << "Server ---> Server readrequest():Receive request = " << endl << res << endl;
         }
         json request = json::parse(res);
         IHandler *handler =  factory->getHandler(request,s);
@@ -95,9 +95,9 @@ void Server::readrequest(s_socket *s, HandlerFactory *factory){
         handler->handle();
         if(debug > 0){
             if(debug == 1)
-                *debug_file << "Server readrequest():End read request." << endl;
+                *debug_file << "Server ---> Server readrequest():End read request." << endl;
             else if(debug == 2)
-                cout << "Server readrequest():End read request." << endl;
+                cout << "Server ---> Server readrequest():End read request." << endl;
         }
     }
     s->closeConnection();
@@ -109,35 +109,35 @@ void Server::start_accept_thread(string ip, string port, ThreadPool* pool){
     while(1){
         if(debug > 0){
             if(debug == 1)
-                *debug_file << "Server start_accept_thread(): Creat new socket." << endl;
+                *debug_file << "Server ---> Server start_accept_thread(): Creat new socket." << endl;
             else if(debug == 2)
-                cout << "Server start_accept_thread(): Creat new socket." << endl;
+                cout << "Server ---> Server start_accept_thread(): Creat new socket." << endl;
         }
         s_socket *s = new s_socket();
         if(s->setConnection(ip,port) != 1){
             if(debug > 0){
                 if(debug == 1)
-                    *debug_file << "Server start_accept_thread(): setConnection() Error!" << endl;
+                    *debug_file << "Server ---> Server start_accept_thread(): setConnection() Error!" << endl;
                 else if(debug == 2)
-                    cout << "Server start_accept_thread(): setConnection() Error!" << endl;
+                    cout << "Server ---> Server start_accept_thread(): setConnection() Error!" << endl;
             }
             continue;
         }
         if(s->acceptClinet()){
             if(debug > 0){
                 if(debug == 1)
-                    *debug_file << "Server start_accept_thread(): Accept client success." << endl;
+                    *debug_file << "Server ---> Server start_accept_thread(): Accept client success." << endl;
                 else if(debug == 2)
-                    cout << "Server start_accept_thread(): Accept client success." << endl;
+                    cout << "Server ---> Server start_accept_thread(): Accept client success." << endl;
             }
             s->setacceptreuse();
             s->closebind();
             pool->enqueue(&readrequest,s,factory);
             if(debug > 0){
                 if(debug == 1)
-                    *debug_file << "Server start_accept_thread(): Enque readrequest() to process_pool success." << endl;
+                    *debug_file << "Server ---> Server start_accept_thread(): Enque readrequest() to process_pool success." << endl;
                 else if(debug == 2)
-                    cout << "Server start_accept_thread(): Enque readrequest() to process_pool success." << endl;
+                    cout << "Server ---> Server start_accept_thread(): Enque readrequest() to process_pool success." << endl;
             }
         }
     }
@@ -148,9 +148,9 @@ void Server::check_schedule(){
     if(next_schedule - now_time <= 0){
         if(debug > 0){
             if(debug == 1)
-                *debug_file << "Server check_schedulen(): Trigger to do scheduale." << endl;
+                *debug_file << "Server ---> Server check_schedulen(): Trigger to do scheduale." << endl;
             else if(debug == 2)
-                cout << "Server check_schedulen(): Trigger to do scheduale." << endl;
+                cout << "Server ---> Server check_schedulen(): Trigger to do scheduale." << endl;
         }
         do_schedual_tex.lock();
         do_schedual = true;
@@ -170,35 +170,36 @@ void Server::run(){
         do_schedual_tex.lock();
         if(do_schedual){
             next_schedule = now_time + sched_iteration;
+            schedual_busy_tex.lock();
             if(!schedual_busy){
                 if(debug > 0){
                     if(debug == 1)
-                        *debug_file << "conut:" << count << ": Server run(): Start send cmd to schedual." << endl;
+                        *debug_file << "conut:" << count << ": Server ---> Server run(): Start send cmd to schedual." << endl;
                     else if(debug == 2)
-                        cout << "conut:" << count << ": Server run(): Start send cmd to schedual." << endl;
+                        cout << "conut:" << count << ": Server ---> Server run(): Start send cmd to schedual." << endl;
                     count++;
                 }
                 if(contact_scheduler() == 1){
                     
                     do_schedual = false;
                     do_schedual_tex.unlock();
-                    schedual_busy_tex.lock();
                     schedual_busy = true;
                     schedual_busy_tex.unlock();
                     if(debug > 0){
                         if(debug == 1)
-                            *debug_file << "Server run(): Contact_scheduler() sccess." << endl;
+                            *debug_file << "Server ---> Server run(): Contact_scheduler() sccess." << endl;
                         else if(debug == 2)
-                            cout << "Server run(): Contact_scheduler() sccess." << endl;
+                            cout << "Server ---> Server run(): Contact_scheduler() sccess." << endl;
                     }
                 }
                 else{
                     if(debug > 0){
                         if(debug == 1)
-                            *debug_file << "Server run(): Contact_scheduler() fail." << endl;
+                            *debug_file << "Server ---> Server run(): Contact_scheduler() fail." << endl;
                         else if(debug == 2)
-                            cout << "Server run(): Contact_scheduler() fail." << endl;
+                            cout << "Server ---> Server run(): Contact_scheduler() fail." << endl;
                     }
+                    schedual_busy_tex.unlock();
                     do_schedual = false;
                     do_schedual_tex.unlock();
                 }
@@ -206,10 +207,11 @@ void Server::run(){
             else{
                 if(debug > 0){
                     if(debug == 1)
-                        *debug_file << "Server run(): Scheduler is busy." << endl;
+                        *debug_file << "Server ---> Server run(): Scheduler is busy." << endl;
                     else if(debug == 2)
-                        cout << "Server run(): Scheduler is busy." << endl;
+                        cout << "Server ---> Server run(): Scheduler is busy." << endl;
                 }
+                schedual_busy_tex.unlock();
                 do_schedual = false;
                 do_schedual_tex.unlock();
             }
@@ -226,18 +228,18 @@ int Server::contact_scheduler(){
     if(s.setConnection(sch_ip,sch_port) != 1){
         if(debug > 0){
             if(debug == 1)
-                *debug_file << "Server contact_scheduler(): Server client socket creat error !" << endl;
+                *debug_file << "Server ---> Server contact_scheduler(): Server client socket creat error !" << endl;
             else if(debug == 2)
-                cout << "Server contact_scheduler(): Server client socket creat error !" << endl;
+                cout << "Server ---> Server contact_scheduler(): Server client socket creat error !" << endl;
         }
         return 0;
     }
     if(s.connect2server() != 1){
         if(debug > 0){
             if(debug == 1)
-                *debug_file << "Server contact_scheduler(): Server client socket connect error !" << endl;
+                *debug_file << "Server ---> Server contact_scheduler(): Server client socket connect error !" << endl;
             else if(debug == 2)
-                cout << "Server contact_scheduler(): Server client socket connect error !" << endl;
+                cout << "Server ---> Server contact_scheduler(): Server client socket connect error !" << endl;
         }
         return 0;
     }
