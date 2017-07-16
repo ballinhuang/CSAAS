@@ -34,6 +34,7 @@ class Monitor{
         json getnodelist();
         void setjobtoready(int,std::string);
         void setjobtorunning(int,std::string);
+        void setjobtocomplete(int);
         Node getnodeinfo(std::string);
         json getjobinfo(int);
     private:
@@ -45,6 +46,7 @@ class Monitor{
         std::mutex jobtex;
         std::mutex readytex;
         std::mutex runningtex;
+        std::mutex completetex;
         int jobcount = 0; 
         void notitfynewjob();
 };

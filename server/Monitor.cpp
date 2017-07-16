@@ -42,7 +42,7 @@ void Monitor::notitfyschedualfinish(){
 void Monitor::addjob(json newjob){
     jobtex.lock();
     newjob["JOBID"] = jobcount;
-    newjob["JOBSTAT"] = "WAITE";
+    newjob["JOBSTAT"] = "WAIT";
     joblist[jobcount] = newjob;
     jobcount++;
     jobtex.unlock();
@@ -97,6 +97,29 @@ void Monitor::setjobtorunning(int jobid,string mothor){
             *debug_file << "Server ---> Monitor setjobtorunning(): Move job to running queue  jobid = " << jobid << " content = " << runninglist[jobid].dump() << endl;
         else if(debug == 2)
             cout << "Server ---> Monitor setjobtorunning(): Move job to running queue  jobid = " << jobid << " content = " << runninglist[jobid].dump() << endl;
+    }
+}
+
+void Monitor::setjobtocomplete(int jobid){
+    map<int , json>::iterator iter;
+    runningtex.lock();
+    iter = runninglist.find(jobid);
+    if(iter == readylist.end()){
+        runningtex.unlock();
+        return;
+    }
+    (iter->second)["JOBSTAT"] = "COMPLETE";
+    completetex.lock();
+    completelist[jobid] = iter->second;
+    completetex.unlock();
+    runninglist.erase(iter);
+    runningtex.unlock();
+    
+    if(debug > 0){
+        if(debug == 1)
+            *debug_file << "Server ---> Monitor setjobtorunning(): Move job to complete queue  jobid = " << jobid << " content = " << completelist[jobid].dump() << endl;
+        else if(debug == 2)
+            cout << "Server ---> Monitor setjobtorunning(): Move job to complete queue  jobid = " << jobid << " content = " << completelist[jobid].dump() << endl;
     }
 }
 

@@ -45,4 +45,12 @@ class NodeStateHandler : public IHandler{
     s_socket *s;
 };
 
+class DoneJobHandler : public IHandler{
+    public:
+    DoneJobHandler(json,s_socket*);
+    void handle();
+    private:
+    json req_done_job;
+    s_socket *s;
+};
 #endif

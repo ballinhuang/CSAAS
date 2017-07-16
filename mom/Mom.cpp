@@ -3,6 +3,7 @@
 #include <json.hpp>
 #include "c_socket.hpp"
 #include "Message.hpp"
+#include "JobQueue.hpp"
 #include <unistd.h>
 
 using json = nlohmann::json;
@@ -22,7 +23,29 @@ void Mom::set_mom_attr(string ip, string port){
     mom_port = port;
 }
 
+void Mom::notify(int msg){
+    // msg == 0 notitfy
+    if(msg == 0){
+        if(debug > 0){
+            if(debug == 1)
+                *debug_file << "MOM ---> MOM notify(0): Job finish!" << endl;
+            else if(debug == 2)
+                cout << "MOM ---> MOM notify(0): Job finish!" << endl;
+        }
+        job_down_tex.lock();
+        job_down = true;
+        job_down_tex.unlock();
+    }
+}
 
+void Mom::attach_success(){
+    if(debug > 0){
+        if(debug == 1)
+            *debug_file << "MOM ---> MOM attach_success():Attach success." << endl;
+        else if(debug == 2)
+            cout << "MOM ---> MOM attach_success():Attach success." << endl;
+    }
+}
 
 void Mom::readrequest(s_socket *s, MomHandlerFactory *factory){
     if(debug > 0){
@@ -105,6 +128,26 @@ void Mom::run(){
     mom_pool = new ThreadPool(1);
     mom_pool->enqueue(start_accept_thread,mom_ip,mom_port,request_pool);
     while(1){
-       
+        job_down_tex.lock();
+        if(job_down){
+            job_down = false;
+            job_down_tex.unlock();
+            //contact to server
+            Message donejob_msg;
+            c_socket socket;
+            if(socket.setConnection(svr_ip,svr_port) == 0){
+                continue;
+            }
+            if(socket.connect2server() == 0){
+                continue;
+            }
+            donejob_msg.msg = JobQueue::GetInstance()->getdonejob();
+            donejob_msg.encode_Header("mom","server","donejob");
+            socket.send(donejob_msg.encode_Message());
+            socket.closeConnection();
+        }
+        else{
+            job_down_tex.unlock();
+        }
     }
 }

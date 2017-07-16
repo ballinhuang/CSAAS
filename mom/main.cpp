@@ -4,7 +4,11 @@
 #include <unistd.h>
 #include <mutex>
 #include "Mom.hpp"
+#include "JobQueue.hpp"
 using namespace std;
+
+mutex jobqueue_mtx;
+JobQueue *JobQueue::jobquque = 0;
 
 int debug = 0;
 ofstream *debug_file;
@@ -21,17 +25,33 @@ int main(int argc, char **argv){
         else if(arg == "-odebug"){
             debug = 2;
         }
+        else{
+            cout << "MOM ---> main(): Error command ("<< arg << ") !" << endl;
+            exit(1);
+        }
     }
 
-    ifstream f("server.con");
     string server_ip,server_port;
-    f >> server_ip;
-    f >> server_port;
+    ifstream f("server.con");
+    if(f.is_open()){
+        f >> server_ip;
+        f >> server_port;
+    }
+    else{
+        cout << "MOM ---> main(): Error! server.con not found." << endl;
+        exit(1);
+    }
     f.close();
-    f.open("mom.con");
     string mom_ip,mom_port;
-    f >> mom_ip;
-    f >> mom_port;
+    f.open("mom.con");
+    if(f.is_open()){
+        f >> mom_ip;
+        f >> mom_port;
+    }
+    else{
+        cout << "MOM ---> main(): Error! mom.con not found." << endl;
+        exit(1);
+    }
     f.close();
 
     pid_t pid= fork();
@@ -49,6 +69,7 @@ int main(int argc, char **argv){
     	return 0;
     }
     Mom mom;
+    JobQueue::GetInstance()->attachmom(&mom);
     mom.set_server_attr(server_ip,server_port);
     mom.set_mom_attr(mom_ip,mom_port);
     mom.run();

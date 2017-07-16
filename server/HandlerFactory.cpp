@@ -66,6 +66,19 @@ IHandler *HandlerFactory::getHandler(json request,s_socket *s)
     }
     //NodeStateHandler
 
+    //DoneJobHandler
+    if(request["SENDER"].get<std::string>()   == "mom"    &&
+       request["RECEIVER"].get<std::string>() == "server"       && 
+       request["REQUEST"].get<std::string>()  == "donejob"){
+        if(debug > 0){
+            if(debug == 1)
+                *debug_file << "HandlerFactory getHandler(): Return DoneJobHandler." << endl;
+            else if(debug == 2)
+                cout << "HandlerFactory getHandler(): Return DoneJobHandler." << endl;
+        }
+        return new DoneJobHandler(request,s);
+    }
+    //DoneJobHandler
     //ERROR
     if(debug > 0){
         if(debug == 1)

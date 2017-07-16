@@ -145,3 +145,19 @@ void NodeStateHandler::handle(){
     s->sendmessage(nodestate.encode_Message());
 }
 //NodeStateHandler end
+
+//DoneJobHandler start
+DoneJobHandler::DoneJobHandler(json request, s_socket *socket){
+    s = socket;
+    req_done_job = request;
+}
+
+void DoneJobHandler::handle(){
+    if(req_done_job.count("COMPLETEJOB") == 0 ){
+        return;
+    }
+    for(int i = 0 ; i < (int)req_done_job["COMPLETEJOB"].size() ; i++){
+        Monitor::GetInstance()->setjobtocomplete(req_done_job["COMPLETEJOB"][i].get<int>());
+    }
+}
+//DoneJobHandler end
