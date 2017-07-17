@@ -28,21 +28,28 @@ RunJobHandler::RunJobHandler(json job, s_socket *socket){
 void RunJobHandler::sig_fork(int signo)
 {
     int stat;
-    waitpid(0,&stat,WNOHANG);
+    while(waitpid(-1,&stat,WNOHANG) > 0);
     JobQueue::GetInstance()->notitfyjobdone();
     return;
 }
 
 void RunJobHandler::handle(){
+    if(debug > 0){
+        if(debug == 1)
+            *debug_file << "MOM ---> RunJobHandler handle(): Start check command path." << endl;
+        else if(debug == 2)
+            cout << "MOM ---> RunJobHandler handle(): Start check command path." << endl;
+    }
     int command_count = (int)req_run_job["SCRIPT"].size();
-    char *env_path;
-    env_path = (char*)malloc(sizeof(char) * req_run_job["ENV"]["PATH"].get<string>().length());
     bool can_run = true;
     for(int i = 0 ; i < command_count ; i++){
         stringstream ss;
         ss << req_run_job["SCRIPT"][i].get<string>();
         string command;
         ss >> command;
+        char *env_path;
+        env_path = (char*)malloc(sizeof(char) * req_run_job["ENV"]["PATH"].get<string>().length());
+        strcpy(env_path,req_run_job["ENV"]["PATH"].get<string>().c_str());
         char *path = strtok(env_path,":");
         bool can_exe = false;
         while(path != NULL){
@@ -51,12 +58,14 @@ void RunJobHandler::handle(){
             if( access(check_path.c_str(), X_OK) == 0 ){
                 req_run_job["SCRIPTPATH"][i] = check_path;
                 can_exe = true;
+                free(env_path);
                 break;
             }
             path = strtok(NULL,":");
         }
         if(!can_exe){
             can_run = false;
+            free(env_path);
             break;
         }
     }
@@ -66,8 +75,14 @@ void RunJobHandler::handle(){
         return;
     }
 
+    if(debug > 0){
+        if(debug == 1)
+            *debug_file << "MOM ---> RunJobHandler handle(): Command can run." << endl;
+        else if(debug == 2)
+            cout << "MOM ---> RunJobHandler handle(): Command can run." << endl;
+    }
+
     signal (SIGCHLD, sig_fork);
-    int status;
     pid_t pid;
 
     pid = fork();
@@ -77,6 +92,7 @@ void RunJobHandler::handle(){
     }
     else if (pid == 0)
     {
+        JobQueue::GetInstance()->i_am_jobstarter = true;
         char *envp[10]={0};
         envp[0] = (char*)malloc(sizeof(char) * req_run_job["ENV"]["PATH"].get<string>().length()+6);
         strcpy(envp[0],"PATH=");
@@ -84,16 +100,22 @@ void RunJobHandler::handle(){
         char fileName[100];
         sprintf(fileName,"JOB%d.OUT", req_run_job["JOBID"].get<int>());
         int fd_out = open(fileName, O_WRONLY | O_CREAT | O_TRUNC , S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-        dup2(fd_out, STDOUT_FILENO);
-        close(fd_out);
         for(int i = 0 ; i < command_count ; i++){
             pid_t p;
+            int status;
             p = fork();
             if (p < 0){
-                // job fail
+                if(debug > 0){
+                    if(debug == 1)
+                        *debug_file << "MOM ---> RunJobHandler handle(): fork() fail!" << endl;
+                     else if(debug == 2)
+                        cout << "MOM ---> RunJobHandler handle(): fork() fail!" << endl;
+                }
                 exit(1);
             }
             else if(p == 0){
+                dup2(fd_out, STDOUT_FILENO);
+                close(fd_out);
                 char *argv[10]={0};
                 stringstream ss;
                 ss << req_run_job["SCRIPT"][i].get<string>();
@@ -103,9 +125,22 @@ void RunJobHandler::handle(){
                     strcpy(argv[i],argvstr.c_str()); 		
                 }
                 execve(req_run_job["SCRIPTPATH"][i].get<string>().c_str(),argv,envp);
+
+                if(debug > 0){
+                    if(debug == 1)
+                        *debug_file << "MOM ---> RunJobHandler handle(): execve() fail!" << endl;
+                     else if(debug == 2)
+                        cerr << "MOM ---> RunJobHandler handle(): execve() fail!" << endl;
+                }
             }
             else{
-                waitpid( pid, &status, 0 );
+                if(debug > 0){
+                    if(debug == 1)
+                        *debug_file << "MOM ---> RunJobHandler handle(): execve() the command = " << req_run_job["SCRIPT"][i].get<string>() << endl;
+                     else if(debug == 2)
+                        cout << "MOM ---> RunJobHandler handle(): execve() the command = " << req_run_job["SCRIPT"][i].get<string>() << endl;
+                }
+                waitpid( p, &status, 0 );
                 //parent waite job complete
             }
         }

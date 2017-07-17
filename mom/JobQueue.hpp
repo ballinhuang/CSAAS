@@ -27,6 +27,7 @@ class JobQueue{
         void notitfyjobdone();
         void addjob(int,json);
         json getdonejob();
+        bool i_am_jobstarter = false;
     private:
         std::map<int,json> jobqueue;
         std::mutex jobqueuetex;

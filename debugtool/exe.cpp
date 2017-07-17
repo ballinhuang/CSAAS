@@ -10,7 +10,7 @@ void sig_fork(int signo)
 {
     pid_t pid;
     int stat;
-    // 呼叫waitpid(),等待子程序返回, 若無子程序返回, 也不一直等待 
+    printf("signal, ID is %d\n", getpid());
     pid=waitpid(0,&stat,WNOHANG);
     
     return;

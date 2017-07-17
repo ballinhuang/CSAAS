@@ -32,7 +32,9 @@ void JobQueue::attachmom(Observer *obs) {
 }
 
 void JobQueue::notitfyjobdone(){
-    observer->notify(0);
+    if(!i_am_jobstarter){
+        observer->notify(0);
+    }
 }
 
 void JobQueue::addjob(int jobid,json job){
