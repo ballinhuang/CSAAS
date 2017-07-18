@@ -1,11 +1,2 @@
-CC = g++
-INCLUDE = ../lib
-
-all: sender clean
-
-sender: cc_socket.o Message.o main.o
-	${CC} *.o ${LIB} -I ${INCLUDE} -o $@
-%.o: %.cpp
-	${CC} $^ ${LIB} -I ${INCLUDE} -c
-clean:
-	rm -f *.o
+all:
+	$(MAKE) -C scheduler-debugtool
