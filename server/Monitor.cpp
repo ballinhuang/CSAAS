@@ -168,11 +168,7 @@ void Monitor::setnodelist(){
         string ip,port,name;
         int core;
         while( nodes_fd >> ip >> port >> name >> core){
-            Node node;
-            node.setnodeip(ip);
-            node.setnodeport(port);
-            node.setnodename(name);
-            node.setCPUcore(core);
+            Node node(ip, port, name, core);
             nodelist[name] = node;
         }
     }
@@ -186,8 +182,9 @@ json Monitor::getnodelist(){
     json result;
     int i = 0;
     for(map<string,Node>::iterator it = nodelist.begin() ; it != nodelist.end() ; it++){
-        result["NODES"][i][0] = it->second.getnodename();
-        result["NODES"][i][1] = it->second.getnodeCPUcore();
+        result["NODES"][i] = it->second.getnodename();
+        result["NPS"][i] = it->second.getnodeCPUcore();
+        result["ONPS"][i] = it->second.getoriginalCPUcore();
         i++;
     }
     return result;
