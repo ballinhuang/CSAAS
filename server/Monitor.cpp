@@ -49,7 +49,7 @@ void Monitor::addjob(json newjob){
     notitfynewjob();
 }
 
-void Monitor::setjobtoready(int jobid, string node){
+void Monitor::setjobtoready(int jobid, string node, int np){
     map<int , json>::iterator iter;
     jobtex.lock();
     iter = joblist.find(jobid);
@@ -58,6 +58,7 @@ void Monitor::setjobtoready(int jobid, string node){
         (iter->second)["JOBSTAT"] = "READY";
         readylist[jobid] = iter->second;
         (readylist[jobid])["RUNNODE"].push_back(node);
+        (readylist[jobid])["RUNNP"].push_back(node);
         readytex.unlock();
         joblist.erase(iter);
         jobtex.unlock();
@@ -65,7 +66,8 @@ void Monitor::setjobtoready(int jobid, string node){
     else{
         jobtex.unlock();
         readytex.lock();
-        (runninglist[jobid])["RUNNODE"].push_back(node);
+        (readylist[jobid])["RUNNODE"].push_back(node);
+        (readylist[jobid])["RUNNP"].push_back(node);
         readytex.unlock();
     }
     if(debug > 0){
@@ -123,6 +125,29 @@ void Monitor::setjobtocomplete(int jobid){
     }
 }
 
+void Monitor::setjobtofail(int jobid){
+    map<int , json>::iterator iter;
+    jobtex.lock();
+    iter = joblist.find(jobid);
+    if(iter == joblist.end()){
+        jobtex.unlock();
+        return;
+    }
+    (iter->second)["JOBSTAT"] = "FAIL";
+    failtex.lock();
+    faillist[jobid] = iter->second;
+    failtex.unlock();
+    joblist.erase(iter);
+    jobtex.unlock();
+    
+    if(debug > 0){
+        if(debug == 1)
+            *debug_file << "Server ---> Monitor setjobtofail(): Move job to fial queue  jobid = " << jobid << " content = " << faillist[jobid].dump() << endl;
+        else if(debug == 2)
+            cout << "Server ---> Monitor setjobtofail(): Move job to fail queue  jobid = " << jobid << " content = " << faillist[jobid].dump() << endl;
+    }
+}
+
 json Monitor::getjobstat(){
     json result;
     jobtex.lock();
@@ -133,13 +158,13 @@ json Monitor::getjobstat(){
             result["NODENEED"][i] = (it->second)["NODENEED"];
         }
         else{
-            result["NODENEED"][i] = 0;
+            result["NODENEED"][i] = 1;
         }
         if((it->second).count("NPNEED") == 1){
             result["NPNEED"][i] = (it->second)["NPNEED"];
         }
         else{
-            result["NPNEED"][i] = 0;
+            result["NPNEED"][i] = 1;
         }
         i++;
     }

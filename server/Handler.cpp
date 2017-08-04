@@ -34,12 +34,12 @@ RunJobHandler::RunJobHandler(json req_run, s_socket *socket){
 }
 
 void RunJobHandler::handle(){
-    int task_count;
     if(req_runjob.count("JOBID") != 0){
-        task_count = req_runjob["TASKCOUNT"].get<int>();
-        for(int i = 0 ; i < task_count ; i++){
-            Monitor::GetInstance()->setjobtoready(req_runjob["JOBID"][i].get<int>(),req_runjob["NODENAME"][i].get<std::string>());
-        }
+        for(int i = 0 ; i < (int)req_runjob["JOBID"].size() ; i++)
+            if(req_runjob["NPS"][i] > 0)
+                Monitor::GetInstance()->setjobtoready(req_runjob["JOBID"][i].get<int>(),req_runjob["NODENAME"][i].get<std::string>(),req_runjob["NPS"][i].get<int>());
+            else
+                Monitor::GetInstance()->setjobtofail(req_runjob["JOBID"][i].get<int>());
     }
     else
     {
@@ -48,7 +48,7 @@ void RunJobHandler::handle(){
     }
     //ERROR CONCERN
     Monitor::GetInstance()->notitfyschedualfinish();
-    for(int i = 0 ; i < task_count ; i++){
+    for(int i = 0 ; i < (int)req_runjob["JOBID"].size() ; i++){
 
         json jobinfo = Monitor::GetInstance()->getjobinfo(req_runjob["JOBID"][i].get<int>());
         if(jobinfo == NULL){
