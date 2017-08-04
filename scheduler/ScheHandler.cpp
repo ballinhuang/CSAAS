@@ -148,6 +148,8 @@ bool FIFOScheHandler::handleSingleNode(Message &req, json &queue, json &node, in
 
     if(can_not_do) {
         req.msg["JOBID"][queue_index] = queue["JOBID"][queue_index];
+        req.msg["NODENAME"][queue_index] = "FAIL";
+        req.msg["NPS"][queue_index] = -1;
         if(debug == 1)
             *debug_file << "Scheduler ---> JOB" << queue_index << " can't execute on any node." << endl;
         else if(debug == 2)
@@ -199,6 +201,8 @@ bool FIFOScheHandler::handleMultiNode(Message &req, json &queue, json &node, int
 
         if(can_not_do) {
             req.msg["JOBID"][queue_index] = queue["JOBID"][queue_index];
+            req.msg["NODENAME"][queue_index] = "FAIL";
+            req.msg["NPS"][queue_index] = -1;
             if(debug == 1)
                 *debug_file << "Scheduler ---> JOB" << queue_index << " can't execute on any node." << endl;
             else if(debug == 2)
