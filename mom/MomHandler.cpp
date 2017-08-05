@@ -130,6 +130,24 @@ void RunJobHandler::handle()
         int fd_out = open(fileName, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
         for (int i = 0; i < command_count; i++)
         {
+            /*
+                if nodefile need creat it.
+            */
+            bool is_parallel = false;
+            if (req_run_job["SCRIPT"][i].get<string>().find("<nodefile>") != -1)
+            {
+                ofstream nodefile;
+                nodefile.open("nodefile");
+                for (int n = 0; n < req_run_job["RUNNODE"].size(); n++)
+                {
+                    nodefile << req_run_job["RUNNODE"][n].get<string>();
+                    nodefile << " slots=" << req_run_job["RUNNP"][n].get<string>();
+                    nodefile << endl;
+                }
+                nodefile.close();
+                is_parallel = true;
+            }
+
             pid_t p;
             int status;
             p = fork();
@@ -152,7 +170,7 @@ void RunJobHandler::handle()
                 {
                     getcwd(cwd, sizeof(cwd));
                     string cwd_str(cwd);
-                    //remove ./
+                    //remove "./"
                     string temp = req_run_job["SCRIPT"][i].get<string>();
                     temp.erase(0, 2);
                     req_run_job["SCRIPT"][i] = temp;
@@ -166,8 +184,16 @@ void RunJobHandler::handle()
                 string argvstr;
                 for (int i = 0; ss >> argvstr && i < 10; i++)
                 {
-                    argv[i] = (char *)malloc(sizeof(char) * argvstr.size());
-                    strcpy(argv[i], argvstr.c_str());
+                    if (argvstr.compare("<nodefile>") == 0)
+                    {
+                        argv[i] = (char *)malloc(sizeof(char) * (argvstr.size() - 2));
+                        strcpy(argv[i], "nodefile");
+                    }
+                    else
+                    {
+                        argv[i] = (char *)malloc(sizeof(char) * argvstr.size());
+                        strcpy(argv[i], argvstr.c_str());
+                    }
                 }
                 execve(req_run_job["SCRIPTPATH"][i].get<string>().c_str(), argv, envp);
 
@@ -178,6 +204,7 @@ void RunJobHandler::handle()
                     else if (debug == 2)
                         cerr << "MOM ---> RunJobHandler handle(): execve() fail!" << endl;
                 }
+                exit(1);
             }
             else
             {
@@ -190,6 +217,12 @@ void RunJobHandler::handle()
                 }
                 waitpid(p, &status, 0);
                 //parent waite job complete
+
+                // remove the nodefile
+                if (is_parallel)
+                {
+                    remove("nodefile");
+                }
             }
         }
         exit(1);
