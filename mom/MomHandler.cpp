@@ -141,7 +141,7 @@ void RunJobHandler::handle()
                 for (int n = 0; n < req_run_job["RUNNODE"].size(); n++)
                 {
                     nodefile << req_run_job["RUNNODE"][n].get<string>();
-                    nodefile << " slots=" << req_run_job["RUNNP"][n].get<string>();
+                    nodefile << " slots=" << req_run_job["RUNNP"][n].get<int>();
                     nodefile << endl;
                 }
                 nodefile.close();

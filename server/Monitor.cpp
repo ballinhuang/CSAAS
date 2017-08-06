@@ -51,25 +51,26 @@ void Monitor::addjob(json newjob){
 
 void Monitor::setjobtoready(int jobid, string node, int np){
     map<int , json>::iterator iter;
+    map<std::string,Node>::iterator it;
     jobtex.lock();
     iter = joblist.find(jobid);
     if(iter != joblist.end()){
-        readytex.lock();
         (iter->second)["JOBSTAT"] = "READY";
         readylist[jobid] = iter->second;
         (readylist[jobid])["RUNNODE"].push_back(node);
-        (readylist[jobid])["RUNNP"].push_back(node);
-        readytex.unlock();
+        (readylist[jobid])["RUNNP"].push_back(np);
         joblist.erase(iter);
-        jobtex.unlock();
     }
     else{
-        jobtex.unlock();
-        readytex.lock();
         (readylist[jobid])["RUNNODE"].push_back(node);
-        (readylist[jobid])["RUNNP"].push_back(node);
-        readytex.unlock();
+        (readylist[jobid])["RUNNP"].push_back(np);
     }
+
+    it = nodelist.find(node);
+    cout << "***now node CPU = " << (it->second).getnodeCPUcore() << ", need CPU = " << np << "***" << endl;
+    (it->second).setCPUcore((it->second).getnodeCPUcore() - np);
+    jobtex.unlock();
+
     if(debug > 0){
         if(debug == 1)
             *debug_file << "Server ---> Monitor setjobtoready(): Move job to ready queue  jobid = " << jobid << " content = " << readylist[jobid].dump() << endl;
@@ -88,9 +89,7 @@ void Monitor::setjobtorunning(int jobid,string mothor){
     }
     (iter->second)["JOBSTAT"] = "RUNNING";
     (iter->second)["MOTHERNODE"] = mothor;
-    runningtex.lock();
     runninglist[jobid] = iter->second;
-    runningtex.unlock();
     readylist.erase(iter);
     readytex.unlock();
     
@@ -104,17 +103,26 @@ void Monitor::setjobtorunning(int jobid,string mothor){
 
 void Monitor::setjobtocomplete(int jobid){
     map<int , json>::iterator iter;
+    map<std::string,Node>::iterator it;
     runningtex.lock();
     iter = runninglist.find(jobid);
-    if(iter == readylist.end()){
+    if(iter == runninglist.end()){
         runningtex.unlock();
         return;
     }
     (iter->second)["JOBSTAT"] = "COMPLETE";
-    completetex.lock();
     completelist[jobid] = iter->second;
-    completetex.unlock();
     runninglist.erase(iter);
+
+    for(int i = 0; i < (int)completelist[jobid].count("RUNNODE"); i++) {
+        it = nodelist.find(completelist[jobid]["RUNNODE"][i].get<string>());
+        (it->second).setCPUcore((it->second).getnodeCPUcore() + completelist[jobid]["RUNNP"][i].get<int>());
+        if(debug == 1)
+            *debug_file << "setjobtocomplete(): completelist is = " << endl << completelist[jobid].dump() << endl;
+        else if(debug == 2)
+            cout << "setjobtocomplete(): completelist is = " << endl << completelist[jobid].dump() << endl;
+    }
+
     runningtex.unlock();
     
     if(debug > 0){
