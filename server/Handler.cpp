@@ -1,9 +1,12 @@
-#include "Handler.hpp"
-#include <json.hpp>
 #include <string>
+#include <unistd.h>
+
 #include "Message.hpp"
 #include "c_socket.hpp"
 #include "Node.hpp"
+#include "Handler.hpp"
+#include <json.hpp>
+
 using json = nlohmann::json;
 using namespace std;
 
@@ -84,15 +87,28 @@ void RunJobHandler::handle()
                 }
                 continue;
             }
-            if (socket.connect2server() == 0)
+            int retry = 0;
+            bool connect = false;
+            while (retry < 3)
             {
-                if (debug > 0)
+                if (socket.connect2server() == 0)
                 {
-                    if (debug == 1)
-                        *debug_file << "Server ---> RunJobHandler handle(): connect2server() ERROR! " << endl;
-                    else if (debug == 2)
-                        cout << "Server ---> RunJobHandler handle(): connect2server() ERROR! " << endl;
+                    if (debug > 0)
+                    {
+                        if (debug == 1)
+                            *debug_file << "Server ---> RunJobHandler handle(): connect2server() ERROR! " << endl;
+                        else if (debug == 2)
+                            cout << "Server ---> RunJobHandler handle(): connect2server() ERROR! " << endl;
+                    }
+                    sleep(1);
+                    retry++;
+                    continue;
                 }
+                connect = true;
+            }
+
+            if (!connect)
+            {
                 continue;
             }
 
