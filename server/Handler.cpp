@@ -1,5 +1,7 @@
 #include <string>
 #include <unistd.h>
+#include <chrono>
+#include <thread>
 
 #include "Message.hpp"
 #include "c_socket.hpp"
@@ -100,11 +102,12 @@ void RunJobHandler::handle()
                         else if (debug == 2)
                             cout << "Server ---> RunJobHandler handle(): connect2server() ERROR! " << endl;
                     }
-                    sleep(1);
+                    this_thread::sleep_for(std::chrono::seconds(1));
                     retry++;
                     continue;
                 }
                 connect = true;
+                break;
             }
 
             if (!connect)
