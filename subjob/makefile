@@ -7,7 +7,9 @@ MODEL := ../lib/Message.o ../lib/cc_socket.o
 OBJS:=$(subst .cpp,.o,$(SRCS))
 RM:=rm -f
 
-all: subjob clean
+all:
+	$(MAKE) subjob
+	$(MAKE) clean
 
 subjob: $(OBJS) $(MODEL)
 	@echo "------ Linking ------" && \

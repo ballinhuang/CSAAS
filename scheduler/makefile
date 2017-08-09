@@ -7,7 +7,9 @@ MODEL := ../lib/Message.o ../lib/cc_socket.o ../lib/s_socket.o
 OBJS:=$(subst .cpp,.o,$(SRCS))
 RM:=rm -f
 
-all: scheduler clean
+all: 
+	$(MAKE) scheduler
+	$(MAKE) clean
 
 scheduler: $(OBJS) $(MODEL)
 	@echo "------ Linking ------" && \
