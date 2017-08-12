@@ -49,6 +49,10 @@ $ vim mom.con
 $ vim subjob.con
 <server's ip> <server's port>
 ```
+or
+```
+$./subjob -i <server's ip> -p <server's port> <filename>
+```
 
 # Example
 (-command) --> optional
