@@ -11,14 +11,43 @@ using namespace std;
 int main(int argc, char **argv)
 {
 
-    string script_name;
-    if (argc > 0 && argv[1] != NULL)
+    string script_name = "";
+    string ip = "", port = "";
+    if (argc > 1)
     {
-        script_name = std::string(argv[1]);
+        string arg;
+        for (int i = 1; i < argc; i++)
+        {
+            arg = std::string(argv[i]);
+            if (arg == "-i")
+            {
+                i++;
+                ip = std::string(argv[i]);
+            }
+            else if (arg == "-p")
+            {
+                i++;
+                port = std::string(argv[i]);
+            }
+            else if (script_name == "")
+            {
+                script_name = std::string(argv[i]);
+            }
+            else
+            {
+                cout << "Subjob ---> main(): Error parameter " << arg << endl;
+                exit(1);
+            }
+        }
     }
-    else
+    if (script_name == "")
     {
         cout << "Subjob ---> main(): Error! No input script file." << endl;
+        exit(1);
+    }
+    if ((ip == "" && port != "") || (ip != "" && port == ""))
+    {
+        cout << "Subjob ---> main(): Error! -i -p must be used at the same time." << endl;
         exit(1);
     }
 
@@ -28,18 +57,20 @@ int main(int argc, char **argv)
     subjob_service srv;
     srv.creatjob(&newjob, script_name);
 
-    string ip, port;
-    ifstream f;
-    f.open("subjob.con");
-    if (f.is_open())
+    if (ip == "" && port == "")
     {
-        f >> ip;
-        f >> port;
-    }
-    else
-    {
-        cout << "Subjob ---> main(): Error! subjob.con not found." << endl;
-        exit(1);
+        ifstream f;
+        f.open("subjob.con");
+        if (f.is_open())
+        {
+            f >> ip;
+            f >> port;
+        }
+        else
+        {
+            cout << "Subjob ---> main(): Error! subjob.con not found." << endl;
+            exit(1);
+        }
     }
 
     cc_socket csock;
