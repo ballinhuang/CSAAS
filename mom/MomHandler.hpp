@@ -7,14 +7,4 @@
 
 using json = nlohmann::json;
 
-class RunJobHandler : public IHandler{
-    public:
-    RunJobHandler(json,s_socket*);
-    void handle();
-    private:
-    static void sig_fork(int);
-    json req_run_job;
-    s_socket *s;
-};
-
 #endif
