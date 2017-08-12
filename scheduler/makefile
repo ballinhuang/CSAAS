@@ -1,7 +1,7 @@
 CC := g++ -std=c++11
 CPPFLAGS := -Wall -O2
 INCLUDE := ../lib
-LIB := -lpthread
+LIB := -pthread
 SRCS := $(shell ls *.cpp)
 MODEL := ../lib/Message.o ../lib/cc_socket.o ../lib/s_socket.o
 OBJS:=$(subst .cpp,.o,$(SRCS))
