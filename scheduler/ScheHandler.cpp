@@ -68,13 +68,17 @@ void FIFOScheHandler::handleschedule(){
     if(queuestate.count("JOBID") > 0){
         if(debug > 0){
             if(debug == 1)
-                *debug_file << "Scheduler ---> FIFOScheHandler handleschedule(): Start Scheduling." << endl;
+                *debug_file << "*****Scheduler ---> FIFOScheHandler handleschedule(): Start Scheduling.*****" << endl;
             else if(debug == 2)
-                cout << "Scheduler ---> FIFOScheHandler handleschedule(): Start Scheduling." << endl;
+                cout << "*****Scheduler ---> FIFOScheHandler handleschedule(): Start Scheduling.*****" << endl;
         }
 
         for(int queue_index = 0 ; queue_index < (int)queuestate["JOBID"].size() ; queue_index++){
-            if(queuestate["NODENEED"][queue_index].get<int>() == 1) {
+            if(queuestate["NODENEED"][queue_index].get<int>() == 0) {
+                if(handleUnsignNode(req_runjob ,queuestate, nodestate, queue_index))
+                    break;
+            }
+            else if(queuestate["NODENEED"][queue_index].get<int>() == 1) {
                 if(handleSingleNode(req_runjob ,queuestate, nodestate, queue_index))
                     break;
             }
@@ -110,6 +114,76 @@ void FIFOScheHandler::handleschedule(){
     socket->closeConnection();
 }
 
+bool FIFOScheHandler::handleUnsignNode(Message &req, json &queue, json &node, int queue_index) {
+    if(debug == 1)
+        *debug_file << "Scheduler ---> FIFOScheHandler handleUnsignNode(): Start Scheduling." << endl;
+    else if(debug == 2)
+        cout << "Scheduler ---> FIFOScheHandler handleUnsignNode(): Start Scheduling." << endl;
+
+    int node_index = 0, NPneed = 0;
+    map<string, int> nodeByNP;
+    map<string, int>::iterator mi;
+
+    for(NPneed = queue["NPNEED"][queue_index].get<int>(), node_index = 0; NPneed > 0 && node_index < (int)node["NODES"].size(); node_index++)
+        NPneed -= node["NPS"][node_index].get<int>();
+    if(NPneed > 0) {
+        req.msg["JOBID"][queue_index] = queue["JOBID"][queue_index];
+        req.msg["NODENAME"][queue_index] = "FAIL";
+        req.msg["NPS"][queue_index] = -1;
+        req.msg["TASKCOUNT"] = req.msg["TASKCOUNT"].get<int>() + 1;
+        if(debug == 1)
+            *debug_file << "Scheduler ---> There are not enough NPs(all) for JOB" << queue_index << " to execute." << endl;
+        else if(debug == 2)
+            cout << "Scheduler ---> There are not enough NPs(all) for JOB" << queue_index << " to execute." << endl;
+        return false;
+    }
+
+    for(NPneed = queue["NPNEED"][queue_index].get<int>(), node_index = 0; NPneed > 0 && node_index < (int)node["NODES"].size(); node_index++) {
+        for(mi = nodeByNP.begin(); mi != nodeByNP.end(); mi++)
+            if(mi->first == node["NODES"][node_index].get<string>())
+                break;
+        if(mi != nodeByNP.end() || node["NPS"][node_index].get<int>() == 0)
+            continue;
+
+        if(NPneed < node["NPS"][node_index].get<int>()) {
+            nodeByNP[node["NODES"][node_index].get<string>()] = NPneed;
+            NPneed = 0;
+        }
+        else {
+            nodeByNP[node["NODES"][node_index].get<string>()] = node["NPS"][node_index].get<int>();
+            NPneed -= node["NPS"][node_index].get<int>();
+        }
+    }
+
+    if(NPneed > 0) {
+        if(debug == 1)
+            *debug_file << "Scheduler ---> There are not enough NPs(now) for JOB" << queue_index << " to execute." << endl;
+        else if(debug == 2)
+            cout << "Scheduler ---> There are not enough NPs(now) for JOB" << queue_index << " to execute." << endl;
+        return true;
+    }
+
+    for(node_index = 0; node_index < (int)node["NODES"].size(); node_index++) {
+        mi = nodeByNP.find(node["NODES"][node_index].get<string>());
+        if(mi != nodeByNP.end())
+            node["NPS"][node_index] = node["NPS"][node_index].get<int>() - mi->second;
+    }
+
+    for(mi = nodeByNP.begin(); mi != nodeByNP.end(); mi++) {
+        req.msg["JOBID"].push_back(queue["JOBID"][queue_index]);
+        req.msg["NODENAME"].push_back(mi->first);
+        req.msg["NPS"].push_back(mi->second);
+    }
+    req.msg["TASKCOUNT"] = req.msg["TASKCOUNT"].get<int>() + 1;
+    
+    if(debug == 1)
+        *debug_file << "Scheduler ---> FIFOScheHandler handleUnsignNode(): End Scheduling." << endl;
+    else if(debug == 2)
+        cout << "Scheduler ---> FIFOScheHandler handleUnsignNode(): End Scheduling." << endl;
+
+    return false;
+}
+
 bool FIFOScheHandler::handleSingleNode(Message &req, json &queue, json &node, int queue_index) {
     if(debug == 1)
         *debug_file << "Scheduler ---> FIFOScheHandler handleSingleNode(): Start Scheduling." << endl;
@@ -124,9 +198,9 @@ bool FIFOScheHandler::handleSingleNode(Message &req, json &queue, json &node, in
             can_not_do = false;
 
         if(queue["NPNEED"][queue_index].get<int>() <= node["NPS"][node_index].get<int>()){
-            req.msg["JOBID"][queue_index] = queue["JOBID"][queue_index];
-            req.msg["NODENAME"][queue_index] = node["NODES"][node_index];
-            req.msg["NPS"][queue_index] = queue["NPNEED"][queue_index].get<int>();
+            req.msg["JOBID"].push_back(queue["JOBID"][queue_index]);
+            req.msg["NODENAME"].push_back(node["NODES"][node_index]);
+            req.msg["NPS"].push_back(queue["NPNEED"][queue_index].get<int>());
             node["NPS"][node_index] = node["NPS"][node_index].get<int>() - queue["NPNEED"][queue_index].get<int>();
             if(debug == 1) {
                 *debug_file << "Scheduler ---> Assin " << req.msg["JOBID"][queue_index] << " to " << req.msg["NODENAME"][queue_index] << endl;
@@ -150,6 +224,7 @@ bool FIFOScheHandler::handleSingleNode(Message &req, json &queue, json &node, in
         req.msg["JOBID"][queue_index] = queue["JOBID"][queue_index];
         req.msg["NODENAME"][queue_index] = "FAIL";
         req.msg["NPS"][queue_index] = -1;
+        req.msg["TASKCOUNT"] = req.msg["TASKCOUNT"].get<int>() + 1;
         if(debug == 1)
             *debug_file << "Scheduler ---> JOB" << queue_index << " can't execute on any node." << endl;
         else if(debug == 2)
@@ -203,6 +278,7 @@ bool FIFOScheHandler::handleMultiNode(Message &req, json &queue, json &node, int
             req.msg["JOBID"][queue_index] = queue["JOBID"][queue_index];
             req.msg["NODENAME"][queue_index] = "FAIL";
             req.msg["NPS"][queue_index] = -1;
+            req.msg["TASKCOUNT"] = req.msg["TASKCOUNT"].get<int>() + 1;
             if(debug == 1)
                 *debug_file << "Scheduler ---> JOB" << queue_index << " can't execute on any node." << endl;
             else if(debug == 2)

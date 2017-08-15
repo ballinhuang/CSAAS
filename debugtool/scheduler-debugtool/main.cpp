@@ -142,7 +142,7 @@ int main()
 
         request = ss.readmessage();
         json runjob = json::parse(request);
-        for (int y = 0; y < (int)runjob["JOBID"].size(); y++)
+        for (int y = 0; y < (int)runjob["TASKCOUNT"].get<int>(); y++)
         {
             queue.msg["JOBID"].erase(0);
             queue.msg["NODENEED"].erase(0);
