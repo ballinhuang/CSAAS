@@ -188,7 +188,7 @@ json Monitor::getjobstat()
         }
         else
         {
-            result["NODENEED"][i] = 1;
+            result["NODENEED"][i] = 0;
         }
         if ((it->second).count("NPNEED") == 1)
         {
