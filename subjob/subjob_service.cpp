@@ -102,10 +102,27 @@ void subjob_service::parse_script(Message *j, string script_name)
                 }
             }
         }
+        else if (set.compare("#MPI") == 0)
+        {
+            j->msg["MPI"] = true;
+        }
         else
         {
             j->msg["SCRIPT"][count] = line;
             count++;
+        }
+    }
+    if (j->msg.count("SCRIPT") == 0)
+    {
+        cout << "Error! Script file not has any command." << endl;
+        exit(1);
+    }
+    if (j->msg.count("MPI") == 1)
+    {
+        if ((int)j->msg["SCRIPT"].size() > 1)
+        {
+            cout << "Error! MPI support only can have one command." << endl;
+            exit(1);
         }
     }
     j->msg["JOBNAME"] = script_name + "@" + j->msg["ENV"]["USER"].get<string>();
