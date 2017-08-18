@@ -108,6 +108,7 @@ int main(int argc, char **argv)
     if (s.setConnection(server_ip, server_port) == 0)
     {
         cout << "-1";
+        s.closebind();
         return 0;
     }
     s.closebind();
