@@ -1,6 +1,8 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <unistd.h>
+#include <sys/types.h>
 
 #include "Message.hpp"
 #include "cc_socket.hpp"
@@ -13,6 +15,7 @@ int main(int argc, char **argv)
 
     string script_name = "";
     string ip = "", port = "";
+    string username = "";
     if (argc > 1)
     {
         string arg;
@@ -29,7 +32,17 @@ int main(int argc, char **argv)
                 i++;
                 port = std::string(argv[i]);
             }
-            else if (script_name == "")
+            else if (arg == "-u")
+            {
+                if (getuid() != 0)
+                {
+                    cout << "Only root can set -u parameter." << endl;
+                    exit(1);
+                }
+                i++;
+                username = std::string(argv[i]);
+            }
+            else if (script_name == "" && i == argc - 1)
             {
                 script_name = std::string(argv[i]);
             }
@@ -55,7 +68,7 @@ int main(int argc, char **argv)
     newjob.initMessage();
 
     subjob_service srv;
-    srv.creatjob(&newjob, script_name);
+    srv.creatjob(&newjob, script_name, username);
 
     if (ip == "" && port == "")
     {

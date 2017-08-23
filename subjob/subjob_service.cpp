@@ -24,8 +24,13 @@ string subjob_service::trim(const string &str)
     return str.substr(first, (last - first + 1));
 }
 
-void subjob_service::setenv_attrubute(Message *j)
+void subjob_service::setenv_attrubute(Message *j, string username)
 {
+    if (username != "")
+    {
+        j->msg["ENV"]["USER"] = username;
+        return;
+    }
     //string env_need[]={"HOME","HOSTNAME","PATH","TZ","USER","SHELL"};
     string env_need[] = {"HOME", "HOSTNAME", "PATH", "USER"};
     char *envdata;
@@ -128,9 +133,9 @@ void subjob_service::parse_script(Message *j, string script_name)
     j->msg["JOBNAME"] = script_name + "@" + j->msg["ENV"]["USER"].get<string>();
 }
 
-void subjob_service::creatjob(Message *j, string script_name)
+void subjob_service::creatjob(Message *j, string script_name, string username)
 {
-    setenv_attrubute(j);
+    setenv_attrubute(j, username);
     parse_script(j, script_name);
     string sender("subjob");
     string receiver("server");
