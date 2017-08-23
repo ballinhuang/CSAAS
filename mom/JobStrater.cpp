@@ -8,7 +8,12 @@
 #include <fstream>
 #include <sstream>
 #include <cstring>
+#include <cstdio>
+#include <iostream>
+#include <memory>
+#include <stdexcept>
 #include <string>
+#include <array>
 
 #include "JobStrater.hpp"
 #include "c_socket.hpp"
@@ -21,8 +26,6 @@ using namespace std;
 extern int debug;
 extern ofstream *debug_file;
 
-//NewJobHandler start
-
 JobStrater::JobStrater(json job, string ip, string port)
 {
     req_run_job = job;
@@ -30,8 +33,42 @@ JobStrater::JobStrater(json job, string ip, string port)
     svr_port = port;
 }
 
+string JobStrater::getsystemcall(const char *cmd)
+{
+    std::array<char, 128> buffer;
+    std::string result;
+    std::shared_ptr<FILE> pipe(popen(cmd, "r"), pclose);
+    if (!pipe)
+        throw std::runtime_error("popen() failed!");
+    while (!feof(pipe.get()))
+    {
+        if (fgets(buffer.data(), 128, pipe.get()) != nullptr)
+            result += buffer.data();
+    }
+    return result;
+}
+
 void JobStrater::start()
 {
+    /* Get env by mom if root assign user */
+    if (req_run_job["ENV"].count("PATH") == 0)
+    {
+        string env_need[] = {"HOME", "PATH"};
+        string envdata = "";
+        for (int i = 0; i < (int)(sizeof(env_need) / sizeof(env_need[0])); i++)
+        {
+            string cmd = "sudo -Hiu " + req_run_job["ENV"]["USER"].get<string>() + " env | grep '^" + env_need[i] + "'";
+            envdata = getsystemcall(cmd.c_str());
+            if (envdata != "")
+            {
+                size_t pos = envdata.find("=");
+                envdata = envdata.substr(pos + 1);
+                envdata = envdata.substr(0, envdata.length() - 1);
+                req_run_job["ENV"][env_need[i]] = envdata;
+            }
+        }
+    }
+
     /* #MPI */
     if (req_run_job.count("MPI") == 1)
     {
@@ -284,5 +321,3 @@ void JobStrater::start()
     socket.send(donejob_msg.encode_Message());
     socket.closeConnection();
 }
-
-//NewJobHandler end
