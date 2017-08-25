@@ -77,6 +77,48 @@ void Mom::readrequest(s_socket *s, MomHandlerFactory *factory, json request)
 
 void Mom::run()
 {
+    // init mom
+    while (svr_ip == "" && svr_port == "")
+    {
+        s_socket *initsocket = new s_socket();
+        if (initsocket->setConnection(mom_ip, mom_port) != 1)
+        {
+            cerr << "MOM ---> Mom run(): socket bind error!" << endl;
+            exit(1);
+        }
+        if (initsocket->acceptClinet())
+        {
+            initsocket->setacceptreuse();
+            initsocket->closebind();
+            string res = "";
+            res = initsocket->readmessage();
+            if (res == "")
+            {
+                initsocket->closeConnection();
+                continue;
+            }
+            json request = json::parse(res);
+            if (request["SENDER"].get<std::string>() == "server" &&
+                request["RECEIVER"].get<std::string>() == "mom" &&
+                request["REQUEST"].get<std::string>() == "initmom")
+            {
+                if (request.count("SERVERIP") == 1 && request.count("SERVERPORT") == 1)
+                {
+                    set_server_attr(request["SERVERIP"].get<std::string>(), request["SERVERPORT"].get<std::string>());
+                    initsocket->closeConnection();
+                    break;
+                }
+            }
+        }
+        initsocket->closeConnection();
+    }
+    if (debug > 0)
+    {
+        if (debug == 1)
+            *debug_file << "MOM ---> Mom run(): init complete Start." << endl;
+        else if (debug == 2)
+            cout << "MOM ---> Mom run():  init complete Start." << endl;
+    }
     request_pool = new ThreadPool(10);
     MomHandlerFactory *factory = new MomHandlerFactory();
     while (1)
@@ -153,6 +195,7 @@ void Mom::run()
                 }
                 else
                 {
+                    s->closeConnection();
                     continue;
                 }
             }

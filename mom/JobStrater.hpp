@@ -15,6 +15,7 @@ public:
 private:
   json req_run_job;
   std::string svr_ip, svr_port;
+  std::string getsystemcall(const char *);
 };
 
 #endif

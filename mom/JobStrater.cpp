@@ -8,7 +8,12 @@
 #include <fstream>
 #include <sstream>
 #include <cstring>
+#include <cstdio>
+#include <iostream>
+#include <memory>
+#include <stdexcept>
 #include <string>
+#include <array>
 
 #include "JobStrater.hpp"
 #include "c_socket.hpp"
@@ -21,8 +26,6 @@ using namespace std;
 extern int debug;
 extern ofstream *debug_file;
 
-//NewJobHandler start
-
 JobStrater::JobStrater(json job, string ip, string port)
 {
     req_run_job = job;
@@ -30,15 +33,58 @@ JobStrater::JobStrater(json job, string ip, string port)
     svr_port = port;
 }
 
+string JobStrater::getsystemcall(const char *cmd)
+{
+    std::array<char, 128> buffer;
+    std::string result;
+    std::shared_ptr<FILE> pipe(popen(cmd, "r"), pclose);
+    if (!pipe)
+        throw std::runtime_error("popen() failed!");
+    while (!feof(pipe.get()))
+    {
+        if (fgets(buffer.data(), 128, pipe.get()) != nullptr)
+            result += buffer.data();
+    }
+    return result;
+}
+
 void JobStrater::start()
 {
-    if (debug > 0)
+    /* Get env by mom if root assign user */
+    if (req_run_job["ENV"].count("PATH") == 0)
     {
-        if (debug == 1)
-            *debug_file << "MOM ---> JobStrater handle(): Start check command path." << endl;
-        else if (debug == 2)
-            cout << "MOM ---> JobStrater handle(): Start check command path." << endl;
+        string env_need[] = {"HOME", "PATH"};
+        string envdata = "";
+        for (int i = 0; i < (int)(sizeof(env_need) / sizeof(env_need[0])); i++)
+        {
+            string cmd = "sudo -Hiu " + req_run_job["ENV"]["USER"].get<string>() + " env | grep '^" + env_need[i] + "'";
+            envdata = getsystemcall(cmd.c_str());
+            if (envdata != "")
+            {
+                size_t pos = envdata.find("=");
+                envdata = envdata.substr(pos + 1);
+                envdata = envdata.substr(0, envdata.length() - 1);
+                req_run_job["ENV"][env_need[i]] = envdata;
+            }
+        }
     }
+
+    /* #MPI */
+    if (req_run_job.count("MPI") == 1)
+    {
+        if ((int)req_run_job["SCRIPT"].size() != 1)
+        {
+            return;
+        }
+        int cpusum = 0;
+        for (int i = 0; i < (int)req_run_job["RUNNODE"].size(); i++)
+        {
+            cpusum += req_run_job["RUNNP"][i].get<int>();
+        }
+        req_run_job["SCRIPT"][0] = "mpirun -np " + to_string(cpusum) + " -machinefile <nodefile> " + req_run_job["SCRIPT"][0].get<string>();
+    }
+
+    /* check command access */
     int command_count = (int)req_run_job["SCRIPT"].size();
     bool can_run = true;
     for (int i = 0; i < command_count; i++)
@@ -93,20 +139,20 @@ void JobStrater::start()
             cout << "MOM ---> JobStrater handle(): Command can run." << endl;
     }
 
-    /*UID GID*/
+    /* UID GID */
     struct passwd *user;
     user = getpwnam(req_run_job["ENV"]["USER"].get<string>().c_str());
     uid_t uid = user->pw_uid;
     gid_t gid = user->pw_gid;
 
-    /*OUTPUT FILE*/
+    /* OUTPUT FILE */
     char rootdir[1024];
     getcwd(rootdir, sizeof(rootdir));
     char fileName[100];
     sprintf(fileName, "JOB%d.OUT", req_run_job["JOBID"].get<int>());
     int fd_out = open(fileName, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 
-    /*env*/
+    /* parse env */
     char *envp[10] = {0};
     envp[0] = (char *)malloc(sizeof(char) * req_run_job["ENV"]["PATH"].get<string>().length() + 6);
     strcpy(envp[0], "PATH=");
@@ -116,10 +162,12 @@ void JobStrater::start()
     {
         // nodefile creat
         bool is_parallel = false;
+        string nodefilename = "";
         if (req_run_job["SCRIPT"][i].get<string>().find("<nodefile>") != -1)
         {
             ofstream nodefile;
-            nodefile.open("nodefile");
+            nodefilename = "nodefile" + req_run_job["JOBNAME"].get<string>() + to_string(req_run_job["JOBID"].get<int>());
+            nodefile.open(nodefilename.c_str());
             for (int n = 0; n < req_run_job["RUNNODE"].size(); n++)
             {
                 nodefile << req_run_job["RUNNODE"][n].get<string>();
@@ -129,18 +177,18 @@ void JobStrater::start()
             nodefile.close();
             is_parallel = true;
             // change file owner
-            chown("nodefile", uid, gid);
+            chown(nodefilename.c_str(), uid, gid);
 
             //  move file to home
             char node_old_filepath[1000] = "";
             strcat(node_old_filepath, rootdir);
             strcat(node_old_filepath, "/");
-            strcat(node_old_filepath, "nodefile");
+            strcat(node_old_filepath, nodefilename.c_str());
 
             char node_new_filepath[1000] = "";
             strcat(node_new_filepath, req_run_job["ENV"]["HOME"].get<string>().c_str());
             strcat(node_new_filepath, "/");
-            strcat(node_new_filepath, "nodefile");
+            strcat(node_new_filepath, nodefilename.c_str());
 
             rename(node_old_filepath, node_new_filepath);
         }
@@ -189,7 +237,7 @@ void JobStrater::start()
                 if (argvstr.compare("<nodefile>") == 0)
                 {
                     argv[i] = (char *)malloc(sizeof(char) * (argvstr.size() - 2));
-                    strcpy(argv[i], "nodefile");
+                    strcpy(argv[i], nodefilename.c_str());
                 }
                 else
                 {
@@ -229,7 +277,7 @@ void JobStrater::start()
                 char node_new_filepath[1000] = "";
                 strcat(node_new_filepath, req_run_job["ENV"]["HOME"].get<string>().c_str());
                 strcat(node_new_filepath, "/");
-                strcat(node_new_filepath, "nodefile");
+                strcat(node_new_filepath, nodefilename.c_str());
                 remove(node_new_filepath);
             }
         }
@@ -273,5 +321,3 @@ void JobStrater::start()
     socket.send(donejob_msg.encode_Message());
     socket.closeConnection();
 }
-
-//NewJobHandler end
