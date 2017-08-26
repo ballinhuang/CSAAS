@@ -53,4 +53,13 @@ class DoneJobHandler : public IHandler{
     json req_done_job;
     s_socket *s;
 };
+
+class JobStateHandler : public IHandler{
+    public:
+    JobStateHandler(json,s_socket*);
+    void handle();
+    private:
+    json req_job_state;
+    s_socket *s;
+};
 #endif
