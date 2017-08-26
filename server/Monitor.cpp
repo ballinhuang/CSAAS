@@ -1,10 +1,13 @@
 #include "Monitor.hpp"
 #include "Node.hpp"
+#include "Message.hpp"
+#include "c_socket.hpp"
 #include <ThreadPool.h>
 #include <iostream>
 #include <fstream>
 #include <cstdio>
 #include <json.hpp>
+#include "Server.hpp"
 
 using namespace std;
 using json = nlohmann::json;
@@ -241,8 +244,27 @@ void Monitor::setnodelist()
         int core;
         while (nodes_fd >> ip >> port >> name >> core)
         {
+            c_socket cs;
+            if (cs.setConnection(ip, port) == 0)
+            {
+                continue;
+            }
+            if (cs.connect2server() == 0)
+            {
+                continue;
+            }
+
             Node node(ip, port, name, core);
             nodelist[name] = node;
+            Message initmsg;
+            initmsg.initMessage();
+            Server *s;
+            s = dynamic_cast<Server *>(observer);
+            initmsg.msg["SERVERIP"] = s->getsvr_ip();
+            initmsg.msg["SERVERPORT"] = s->getsvr_port();
+            initmsg.encode_Header("server", "mom", "initmom");
+            cs.send(initmsg.encode_Message());
+            cs.closeConnection();
         }
     }
     else
@@ -271,19 +293,20 @@ Node Monitor::getnodeinfo(string nodename)
     return nodelist[nodename];
 }
 
-json Monitor::getall() {
+json Monitor::getall()
+{
     std::map<int, json> all;
 
     jobtex.lock();
     readytex.lock();
     runningtex.lock();
-    for(std::map<int, json>::iterator mi = joblist.begin(); mi != joblist.end(); mi++)
+    for (std::map<int, json>::iterator mi = joblist.begin(); mi != joblist.end(); mi++)
         all[mi->first] = mi->second;
-    for(std::map<int, json>::iterator mi = readylist.begin(); mi != readylist.end(); mi++)
+    for (std::map<int, json>::iterator mi = readylist.begin(); mi != readylist.end(); mi++)
         all[mi->first] = mi->second;
-    for(std::map<int, json>::iterator mi = runninglist.begin(); mi != runninglist.end(); mi++)
+    for (std::map<int, json>::iterator mi = runninglist.begin(); mi != runninglist.end(); mi++)
         all[mi->first] = mi->second;
-    for(std::map<int, json>::iterator mi = completelist.begin(); mi != completelist.end(); mi++)
+    for (std::map<int, json>::iterator mi = completelist.begin(); mi != completelist.end(); mi++)
         all[mi->first] = mi->second;
     runningtex.unlock();
     readytex.unlock();
@@ -291,29 +314,28 @@ json Monitor::getall() {
 
     json result;
     int index = 0;
-    for(std::map<int, json>::iterator mi = all.begin(); mi != all.end(); mi++, index++) {
+    for (std::map<int, json>::iterator mi = all.begin(); mi != all.end(); mi++, index++)
+    {
         result["JOBID"][index] = (mi->second)["JOBID"];
         result["JOBSTAT"][index] = (mi->second)["JOBSTAT"];
         result["USER"][index] = (mi->second)["ENV"]["USER"];
         result["JOBNAME"][index] = (mi->second)["JOBNAME"];
-        if((mi->second)["JOBSTAT"].get<string>() == "RUNNING" || (mi->second)["JOBSTAT"].get<string>() == "READY" || (mi->second)["JOBSTAT"].get<string>() == "COMPLETE") {
-            for(int i = 0; i < (int)(mi->second)["RUNNODE"].size(); i++) {
+        if ((mi->second)["JOBSTAT"].get<string>() == "RUNNING" || (mi->second)["JOBSTAT"].get<string>() == "READY" || (mi->second)["JOBSTAT"].get<string>() == "COMPLETE")
+        {
+            for (int i = 0; i < (int)(mi->second)["RUNNODE"].size(); i++)
+            {
                 result["RUNNODE"][index].push_back((mi->second)["RUNNODE"][i]);
                 result["RUNNP"][index].push_back((mi->second)["RUNNP"][i]);
             }
 
-            if((mi->second)["JOBSTAT"].get<string>() == "RUNNING" || (mi->second)["JOBSTAT"].get<string>() == "COMPLETE")
+            if ((mi->second)["JOBSTAT"].get<string>() == "RUNNING" || (mi->second)["JOBSTAT"].get<string>() == "COMPLETE")
                 result["MOTHERNODE"][index] = (mi->second)["MOTHERNODE"];
         }
-        
+        /*
         if (debug == 2) {
             cout << "=========================================================================" << endl;
             cout << (mi->second).dump() << endl;
-        }
-        /*
-        cout << "*************************************************************************" << endl;
-        cout << result.dump() << endl;
-        */
+        }*/
     }
 
     return result;
