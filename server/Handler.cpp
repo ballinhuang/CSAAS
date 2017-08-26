@@ -205,3 +205,16 @@ void DoneJobHandler::handle()
     }
 }
 //DoneJobHandler end
+
+//JobStateHandler start
+JobStateHandler::JobStateHandler(json request, s_socket *socket) {
+    s = socket;
+}
+
+void JobStateHandler::handle() {
+    Message req_job_state;
+    req_job_state.msg = Monitor::GetInstance()->getall();
+    req_job_state.encode_Header("server", "jobstate", "jobliststate");
+    s->sendmessage(req_job_state.encode_Message());
+}
+//JobStateHandler end

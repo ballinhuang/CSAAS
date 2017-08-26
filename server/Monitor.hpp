@@ -39,6 +39,7 @@ class Monitor
     void setjobtofail(int);
     Node getnodeinfo(std::string);
     json getjobinfo(int);
+    json getall();
 
   private:
     std::map<std::string, Node> nodelist;

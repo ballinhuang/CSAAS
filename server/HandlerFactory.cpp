@@ -79,6 +79,21 @@ IHandler *HandlerFactory::getHandler(json request,s_socket *s)
         return new DoneJobHandler(request,s);
     }
     //DoneJobHandler
+
+    //JobStateHandler
+    if(request["SENDER"].get<std::string>()   == "jobstate"    &&
+       request["RECEIVER"].get<std::string>() == "server"       && 
+       request["REQUEST"].get<std::string>()  == "jobliststate"){
+        if(debug > 0){
+            if(debug == 1)
+                *debug_file << "HandlerFactory getHandler(): Return JobStateHandler." << endl;
+            else if(debug == 2)
+                cout << "HandlerFactory getHandler(): Return JobStateHandler." << endl;
+        }
+        return new JobStateHandler(request,s);
+    }
+    //JobStateHandler
+
     //ERROR
     if(debug > 0){
         if(debug == 1)
