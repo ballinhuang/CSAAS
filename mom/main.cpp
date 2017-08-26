@@ -73,6 +73,7 @@ int main(int argc, char **argv)
     }
 
     string server_ip = "", server_port = "";
+    /*
     f.open("server.con");
     if (f.is_open())
     {
@@ -85,7 +86,7 @@ int main(int argc, char **argv)
         exit(1);
     }
     f.close();
-
+*/
     // Test socket port
     s_socket s;
     if (s.setConnection(mom_ip, mom_port) == 0)

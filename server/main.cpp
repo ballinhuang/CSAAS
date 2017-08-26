@@ -113,9 +113,12 @@ int main(int argc, char **argv)
     }
     s.closebind();
     //creat Server and Monitor , attach Server to Monitor.
-    Monitor::GetInstance()->setnodelist();
-    Server server(Monitor::GetInstance());
 
+    Server *server = new Server();
+    Monitor::GetInstance()->attachserver(server);
+    server->set_server_attr(server_ip, server_port);
+    server->set_scheduler_attr(scheduler_ip, scheduler_port);
+    Monitor::GetInstance()->setnodelist();
     pid_t pid = fork();
     if (pid < 0)
     {
@@ -127,8 +130,5 @@ int main(int argc, char **argv)
         cout << pid;
         return 0;
     }
-
-    server.set_server_attr(server_ip, server_port);
-    server.set_scheduler_attr(scheduler_ip, scheduler_port);
-    server.run();
+    server->run();
 }

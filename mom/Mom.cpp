@@ -106,6 +106,13 @@ void Mom::run()
                 {
                     set_server_attr(request["SERVERIP"].get<std::string>(), request["SERVERPORT"].get<std::string>());
                     initsocket->closeConnection();
+                    if (debug > 0)
+                    {
+                        if (debug == 1)
+                            *debug_file << "MOM ---> Mom run(): init success." << endl;
+                        else if (debug == 2)
+                            cout << "MOM ---> Mom run(): init success." << endl;
+                    }
                     break;
                 }
             }
