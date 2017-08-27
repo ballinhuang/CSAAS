@@ -11,7 +11,7 @@ using namespace std;
 using json = nlohmann::json;
 
 int main(int argc, char **argv) {
-    string ip = "", port = "";
+    string ip = "", port = "", displayType = "";
     if(argc > 1) {
         string arg;
         for(int i = 1; i < argc; i++) {
@@ -23,6 +23,18 @@ int main(int argc, char **argv) {
             else if(arg == "-p") {
                 i++;
                 port = string(argv[i]);
+            }
+            else if(arg == "-t") {
+                i++;
+                displayType = string(argv[i]);
+                for(int i = 0; i < (int)displayType.size(); i++)
+                    if(displayType[i] >= 'a' && displayType[i] <= 'z')
+                        displayType[i] = displayType[i] - 'a' + 'A';
+
+                if(displayType != "DEBUG" && displayType != "COMPLETE" && displayType != "RUNNING" && displayType != "WAIT" && displayType != "FAIL") {
+                    cout << "JobState ---> main(): Error state " << endl;
+                    exit(1);
+                }
             }
             else {
                 cout << "JobState ---> main(): Error parameter " << arg << endl;
@@ -67,7 +79,12 @@ int main(int argc, char **argv) {
     csock.closeConnection();
 
     Display display(list);
-    display.displayState();
+    if(displayType == "")
+        display.displayState();
+    else if(displayType == "DEBUG")
+        display.displayDebug();
+    else
+        display.displayOneType(displayType);
 
     return 0;
 }

@@ -299,6 +299,8 @@ json Monitor::getall()
     jobtex.lock();
     readytex.lock();
     runningtex.lock();
+    completetex.lock();
+    failtex.lock();
     for (std::map<int, json>::iterator mi = joblist.begin(); mi != joblist.end(); mi++)
         all[mi->first] = mi->second;
     for (std::map<int, json>::iterator mi = readylist.begin(); mi != readylist.end(); mi++)
@@ -307,6 +309,10 @@ json Monitor::getall()
         all[mi->first] = mi->second;
     for (std::map<int, json>::iterator mi = completelist.begin(); mi != completelist.end(); mi++)
         all[mi->first] = mi->second;
+    for (std::map<int, json>::iterator mi = faillist.begin(); mi != faillist.end(); mi++)
+        all[mi->first] = mi->second;
+    failtex.unlock();
+    completetex.unlock();    
     runningtex.unlock();
     readytex.unlock();
     jobtex.unlock();
