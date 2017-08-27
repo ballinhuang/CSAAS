@@ -1,5 +1,5 @@
-#ifndef _SCHEHANDLER
-#define _SCHEHANDLER
+#ifndef FIFOSCHEHANDLER_HPP
+#define FIFOSCHEHANDLER_HPP
 
 #include "IScheHandler.hpp"
 #include "cc_socket.hpp"

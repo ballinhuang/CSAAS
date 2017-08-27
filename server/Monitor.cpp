@@ -83,7 +83,7 @@ void Monitor::setjobtoready(int jobid, string node, int np)
     }
 
     it = nodelist.find(node);
-    cout << "***now node CPU = " << (it->second).getnodeCPUcore() << ", need CPU = " << np << "***" << endl;
+    cout << "***node's name is " << (it->second).getnodename() << ", now node CPU = " << (it->second).getnodeCPUcore() << ", need CPU = " << np << "***" << endl;
     (it->second).setCPUcore((it->second).getnodeCPUcore() - np);
     readytex.unlock();
     jobtex.unlock();
@@ -134,8 +134,7 @@ void Monitor::setjobtocomplete(int jobid)
     runningtex.lock();
     completetex.lock();
     iter = runninglist.find(jobid);
-    if (iter == runninglist.end())
-    {
+    if (iter == runninglist.end()) {
         completetex.unlock();
         runningtex.unlock();
         return;
@@ -144,7 +143,7 @@ void Monitor::setjobtocomplete(int jobid)
     completelist[jobid] = iter->second;
     runninglist.erase(iter);
 
-    for (int i = 0; i < (int)completelist[jobid].count("RUNNODE"); i++)
+    for (int i = 0; i < (int)completelist[jobid]["RUNNODE"].size(); i++)
     {
         it = nodelist.find(completelist[jobid]["RUNNODE"][i].get<string>());
         (it->second).setCPUcore((it->second).getnodeCPUcore() + completelist[jobid]["RUNNP"][i].get<int>());
@@ -331,11 +330,10 @@ json Monitor::getall()
             if ((mi->second)["JOBSTAT"].get<string>() == "RUNNING" || (mi->second)["JOBSTAT"].get<string>() == "COMPLETE")
                 result["MOTHERNODE"][index] = (mi->second)["MOTHERNODE"];
         }
-        /*
         if (debug == 2) {
             cout << "=========================================================================" << endl;
             cout << (mi->second).dump() << endl;
-        }*/
+        }
     }
 
     return result;
