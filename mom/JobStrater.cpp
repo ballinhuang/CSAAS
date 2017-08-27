@@ -166,7 +166,7 @@ void JobStrater::start()
         if (req_run_job["SCRIPT"][i].get<string>().find("<nodefile>") != -1)
         {
             ofstream nodefile;
-            nodefilename = "nodefile" + req_run_job["JOBNAME"].get<string>() + to_string(req_run_job["JOBID"].get<int>());
+            nodefilename = "nodefile" + to_string(req_run_job["JOBID"].get<int>());
             nodefile.open(nodefilename.c_str());
             for (int n = 0; n < req_run_job["RUNNODE"].size(); n++)
             {
