@@ -1,6 +1,7 @@
 #include "ScheHandlerFactory.hpp"
 #include <iostream>
 #include <fstream>
+#include "FIFOScheHandler.hpp"
 
 using namespace std;
 extern int debug;

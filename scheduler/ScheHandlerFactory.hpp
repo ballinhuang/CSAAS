@@ -2,7 +2,6 @@
 #define _SCHEHANDLERFACTORY
 
 #include "IScheHandler.hpp"
-#include "ScheHandler.hpp"
 #include <iostream>
 #include "cc_socket.hpp"
 
