@@ -33,7 +33,7 @@ int s_socket::setConnection(string ip, string port)
         return 0;
     }
 
-    if (listen(sock_fd, 256) == -1)
+    if (listen(sock_fd, 1) == -1)
     {
         return 0;
     }
