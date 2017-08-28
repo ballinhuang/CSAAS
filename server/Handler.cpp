@@ -77,6 +77,17 @@ void RunJobHandler::handle()
         {
             string req_node = jobinfo["RUNNODE"][j];
             Node node = Monitor::GetInstance()->getnodeinfo(req_node);
+            message.msg["RUNNODEIP"].push_back(node.getnodeip());
+            message.msg["RUNNODEPORT"].push_back(node.getnodeport());
+        }
+
+        message.encode_Header("server", "mom", "runjob");
+        this_thread::sleep_for(std::chrono::seconds(1));
+
+        for (int j = 0; j < (int)(jobinfo["RUNNODE"].size()); j++)
+        {
+            string req_node = jobinfo["RUNNODE"][j];
+            Node node = Monitor::GetInstance()->getnodeinfo(req_node);
 
             if (socket.setConnection(node.getnodeip(), node.getnodeport()) == 0)
             {
@@ -100,7 +111,7 @@ void RunJobHandler::handle()
                         if (debug == 1)
                             *debug_file << "Server ---> RunJobHandler handle(): connect2server() ERROR! " << endl;
                         else if (debug == 2)
-                            cout << "Server ---> RunJobHandler handle(): connect2server() ERROR! " << endl;
+                            cout << "Server ---> RunJobHandler handle(): connect2server() ERROR! " << req_runjob["JOBID"][i].get<int>() << endl;
                     }
                     this_thread::sleep_for(std::chrono::seconds(1));
                     retry++;
@@ -125,15 +136,6 @@ void RunJobHandler::handle()
             continue;
         }
 
-        for (int j = 0; j < (int)(jobinfo["RUNNODE"].size()); j++)
-        {
-            string req_node = jobinfo["RUNNODE"][j];
-            Node node = Monitor::GetInstance()->getnodeinfo(req_node);
-            message.msg["RUNNODEIP"].push_back(node.getnodeip());
-            message.msg["RUNNODEPORT"].push_back(node.getnodeport());
-        }
-
-        message.encode_Header("server", "mom", "runjob");
         if (debug > 0)
         {
             if (debug == 1)
@@ -207,11 +209,13 @@ void DoneJobHandler::handle()
 //DoneJobHandler end
 
 //JobStateHandler start
-JobStateHandler::JobStateHandler(json request, s_socket *socket) {
+JobStateHandler::JobStateHandler(json request, s_socket *socket)
+{
     s = socket;
 }
 
-void JobStateHandler::handle() {
+void JobStateHandler::handle()
+{
     Message req_job_state;
     req_job_state.msg = Monitor::GetInstance()->getall();
     req_job_state.encode_Header("server", "jobstate", "jobliststate");
