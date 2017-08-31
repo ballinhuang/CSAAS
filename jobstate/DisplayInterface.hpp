@@ -12,6 +12,7 @@ class DisplayInterface {
         virtual void displayState() = 0;
         virtual void displayDebug() = 0;
         virtual void displayOneType(string) = 0;
+        virtual void displayByID(int) = 0;
     protected:
         void noJobMessage();
         void separatedLine();

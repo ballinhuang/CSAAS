@@ -14,7 +14,8 @@ using json = nlohmann::json;
 
 int main(int argc, char **argv) {
     string ip = "", port = "", displayType = "", userName = "";
-    bool shortMode = false;
+    bool detailMode = false;
+    int checkFlag = 0, jobID = -1;
 
     if(argc > 1) {
         string arg;
@@ -28,6 +29,11 @@ int main(int argc, char **argv) {
                 i++;
                 port = string(argv[i]);
             }
+            else if(arg == "-j") {
+                i++;
+                jobID = atoi(argv[i]);
+                checkFlag++;
+            }
             else if(arg == "-t") {
                 i++;
                 displayType = string(argv[i]);
@@ -39,14 +45,21 @@ int main(int argc, char **argv) {
                     cout << "JobState ---> main(): Error state " << endl;
                     exit(1);
                 }
+                checkFlag++;
             }
-            else if(arg == "-short")
-                shortMode = true;
+            else if(arg == "-detail")
+                detailMode = true;
             else {
                 cout << "JobState ---> main(): Error parameter " << arg << endl;
                 exit(1);
             }
         }
+    }
+
+    if(checkFlag > 1) {
+        cout << "JobState ---> main(): Error! Too many parameters, it may causes a conflict." << endl;
+        cout << "For instance, you can not assign both ID and state at the same time." << endl;
+        exit(1);
     }
     
     if((ip == "" && port != "") || (ip != "" && port == "")) {
@@ -93,12 +106,14 @@ int main(int argc, char **argv) {
     csock.closeConnection();
 
     DisplayInterface *display;
-    if(shortMode)
-        display = new SimpleDisplay(list, userName);
-    else
+    if(detailMode)
         display = new DetailDisplay(list, userName);
+    else
+        display = new SimpleDisplay(list, userName);
 
-    if(displayType == "")
+    if(jobID != -1)
+        display->displayByID(jobID);
+    else if(displayType == "")
         display->displayState();
     else if(displayType == "DEBUG")
         display->displayDebug();

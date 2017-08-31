@@ -12,6 +12,7 @@ class SimpleDisplay : public DisplayInterface {
         void displayState();
         void displayOneType(string);
         void displayDebug();
+        void displayByID(int);
 };
 
 #endif
