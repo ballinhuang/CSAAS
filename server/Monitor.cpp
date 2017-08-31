@@ -83,7 +83,6 @@ void Monitor::setjobtoready(int jobid, string node, int np)
     }
 
     it = nodelist.find(node);
-    cout << "***node's name is " << (it->second).getnodename() << ", now node CPU = " << (it->second).getnodeCPUcore() << ", need CPU = " << np << "***" << endl;
     (it->second).setCPUcore((it->second).getnodeCPUcore() - np);
     readytex.unlock();
     jobtex.unlock();

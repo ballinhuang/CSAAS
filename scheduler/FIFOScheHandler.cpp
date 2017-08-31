@@ -125,7 +125,7 @@ bool FIFOScheHandler::handleUnsignNode(Message &req, json &queue, json &node, in
     map<string, int>::iterator mi;
 
     for(NPneed = queue["NPNEED"][queue_index].get<int>(), node_index = 0; NPneed > 0 && node_index < (int)node["NODES"].size(); node_index++)
-        NPneed -= node["NPS"][node_index].get<int>();
+        NPneed -= node["ONPS"][node_index].get<int>();
     if(NPneed > 0) {
         req.msg["JOBID"][queue_index] = queue["JOBID"][queue_index];
         req.msg["NODENAME"][queue_index] = "FAIL";
