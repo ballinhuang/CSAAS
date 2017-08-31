@@ -25,7 +25,7 @@ int c_socket::setConnection(string ip, string port)
 
 int c_socket::connect2server()
 {
-    if (connect(sock_fd, (struct sockaddr *)&server_addr, sizeof(struct sockaddr)) == -1)
+    if ((connect(sock_fd, (struct sockaddr *)&server_addr, sizeof(struct sockaddr))) == -1)
     {
         return 0;
     }
