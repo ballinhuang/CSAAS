@@ -30,6 +30,7 @@ private:
 public:
   int addjob(json);
   void notitfyschedualfinish();
+  void notitfynewjob();
   json getjobstat();
   void setnodelist();
   json getnodelist();
@@ -54,7 +55,6 @@ private:
   std::mutex completetex;
   std::mutex failtex;
   int jobcount = 0;
-  void notitfynewjob();
 };
 
 #endif
