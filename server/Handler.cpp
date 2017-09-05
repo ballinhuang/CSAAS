@@ -59,7 +59,6 @@ void RunJobHandler::handle()
         return;
     }
     //ERROR CONCERN
-    Monitor::GetInstance()->notitfyschedualfinish();
     for (int i = 0; i < (int)req_runjob["JOBID"].size(); i++)
     {
 
@@ -149,6 +148,7 @@ void RunJobHandler::handle()
         socket.closeConnection();
         Monitor::GetInstance()->setjobtorunning(req_runjob["JOBID"][i].get<int>(), message.msg["MOTHERNODE"].get<string>());
     }
+    Monitor::GetInstance()->notitfyschedualfinish();
 }
 
 //RunJobHandler end
@@ -204,6 +204,7 @@ void DoneJobHandler::handle()
     for (int i = 0; i < (int)req_done_job["COMPLETEJOB"].size(); i++)
     {
         Monitor::GetInstance()->setjobtocomplete(req_done_job["COMPLETEJOB"][i].get<int>());
+        Monitor::GetInstance()->notitfynewjob();
     }
 }
 //DoneJobHandler end

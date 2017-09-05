@@ -36,9 +36,9 @@ void Server::notify(int msg)
         if (debug > 0)
         {
             if (debug == 1)
-                *debug_file << "Server ---> Server notify(0): Receive new job!" << endl;
+                *debug_file << "Server ---> Server notify(0): Requset to schedual!" << endl;
             else if (debug == 2)
-                cout << "Server ---> Server notify(0): Receive new job!" << endl;
+                cout << "Server ---> Server notify(0): Requset to schedual!" << endl;
         }
         do_schedual_tex.lock();
         do_schedual = true;
