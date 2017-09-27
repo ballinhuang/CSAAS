@@ -209,6 +209,27 @@ void DoneJobHandler::handle()
 }
 //DoneJobHandler end
 
+//FailJobHandler start
+FailJobHandler::FailJobHandler(json request, s_socket *socket)
+{
+    s = socket;
+    req_fail_job = request;
+}
+
+void FailJobHandler::handle()
+{
+    if (req_fail_job.count("COMPLETEJOB") == 0)
+    {
+        return;
+    }
+    for (int i = 0; i < (int)req_fail_job["COMPLETEJOB"].size(); i++)
+    {
+        Monitor::GetInstance()->setjobtorunfail(req_fail_job["COMPLETEJOB"][i].get<int>());
+        Monitor::GetInstance()->notitfynewjob();
+    }
+}
+//FailJobHandler end
+
 //JobStateHandler start
 JobStateHandler::JobStateHandler(json request, s_socket *socket)
 {

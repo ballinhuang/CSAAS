@@ -187,6 +187,34 @@ void Monitor::setjobtofail(int jobid)
     }
 }
 
+void Monitor::setjobtorunfail(int jobid)
+{
+
+    map<int, json>::iterator iter;
+    runningtex.lock();
+    failtex.lock();
+    iter = runninglist.find(jobid);
+    if (iter == runninglist.end())
+    {
+        failtex.unlock();
+        runningtex.unlock();
+        return;
+    }
+    (iter->second)["JOBSTAT"] = "FAIL";
+    faillist[jobid] = iter->second;
+    runninglist.erase(iter);
+    failtex.unlock();
+    runningtex.unlock();
+
+    if (debug > 0)
+    {
+        if (debug == 1)
+            *debug_file << "Server ---> Monitor setjobtofail(): Move job to fial queue  jobid = " << jobid << " content = " << faillist[jobid].dump() << endl;
+        else if (debug == 2)
+            cout << "Server ---> Monitor setjobtofail(): Move job to fail queue  jobid = " << jobid << " content = " << faillist[jobid].dump() << endl;
+    }
+}
+
 json Monitor::getjobstat()
 {
     json result;
