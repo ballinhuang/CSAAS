@@ -38,6 +38,7 @@ public:
   void setjobtorunning(int, std::string);
   void setjobtocomplete(int);
   void setjobtofail(int);
+  void setjobtorunfail(int);
   Node getnodeinfo(std::string);
   json getjobinfo(int);
   json getall();
