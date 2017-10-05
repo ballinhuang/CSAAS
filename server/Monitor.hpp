@@ -55,6 +55,7 @@ private:
   std::mutex runningtex;
   std::mutex completetex;
   std::mutex failtex;
+  std::mutex nodetex;
   int jobcount = 0;
 };
 
