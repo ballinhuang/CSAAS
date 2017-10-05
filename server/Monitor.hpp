@@ -41,6 +41,7 @@ public:
   void setjobtorunfail(int);
   Node getnodeinfo(std::string);
   json getjobinfo(int);
+  json getrunjobinfo(int);
   json getall();
 
 private:

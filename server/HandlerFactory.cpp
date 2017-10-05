@@ -121,6 +121,22 @@ IHandler *HandlerFactory::getHandler(json request, s_socket *s)
     }
     //JobStateHandler
 
+    //KillJobHandler
+    if (request["SENDER"].get<std::string>() == "killjob" &&
+        request["RECEIVER"].get<std::string>() == "server" &&
+        request["REQUEST"].get<std::string>() == "killjob")
+    {
+        if (debug > 0)
+        {
+            if (debug == 1)
+                *debug_file << "HandlerFactory getHandler(): Return KillJobHandler." << endl;
+            else if (debug == 2)
+                cout << "HandlerFactory getHandler(): Return KillJobHandler." << endl;
+        }
+        return new KillJobHandler(request, s);
+    }
+    //KillJobHandler
+
     //ERROR
     if (debug > 0)
     {

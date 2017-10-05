@@ -257,6 +257,22 @@ json Monitor::getjobstat()
     return result;
 }
 
+json Monitor::getrunjobinfo(int jobid)
+{
+    map<int, json>::iterator iter;
+    json result;
+    runningtex.lock();
+    iter = runninglist.find(jobid);
+    if (iter == runninglist.end())
+    {
+        runningtex.unlock();
+        return NULL;
+    }
+    result = iter->second;
+    runningtex.unlock();
+    return result;
+}
+
 json Monitor::getjobinfo(int jobid)
 {
     map<int, json>::iterator iter;

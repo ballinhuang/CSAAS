@@ -245,3 +245,70 @@ void JobStateHandler::handle()
     s->sendmessage(req_job_state.encode_Message());
 }
 //JobStateHandler end
+
+//KillJobHandler start
+KillJobHandler::KillJobHandler(json request, s_socket *socket)
+{
+    s = socket;
+    req_kill_job = request;
+}
+
+void KillJobHandler::handle()
+{
+    if (req_kill_job.count("JOBID") == 0)
+    {
+        return;
+    }
+    json jobinfo = Monitor::GetInstance()->getrunjobinfo(req_kill_job["JOBID"].get<int>());
+    if (jobinfo == NULL)
+        return;
+    Monitor::GetInstance()->setjobtorunfail(req_kill_job["JOBID"].get<int>());
+
+    Node node = Monitor::GetInstance()->getnodeinfo(jobinfo["MOTHERNODE"].get<string>());
+
+    c_socket socket;
+
+    if (socket.setConnection(node.getnodeip(), node.getnodeport()) == 0)
+    {
+        if (debug > 0)
+        {
+            if (debug == 1)
+                *debug_file << "Server ---> KillJobHandler handle(): setConnection() ERROR! " << endl;
+            else if (debug == 2)
+                cout << "Server ---> KillJobHandler handle(): setConnection() ERROR! " << endl;
+        }
+        return;
+    }
+    else
+    {
+        bool connect = false;
+        int retry = 0;
+        while (retry < 3)
+        {
+            if (socket.connect2server() == 0)
+            {
+                if (debug > 0)
+                {
+                    if (debug == 1)
+                        *debug_file << "Server ---> KillJobHandler handle(): connect2server() ERROR! " << endl;
+                    else if (debug == 2)
+                        cout << "Server ---> KillJobHandler handle(): connect2server() ERROR! " << endl;
+                }
+                this_thread::sleep_for(std::chrono::seconds(1));
+                retry++;
+                continue;
+            }
+            connect = true;
+            break;
+        }
+        if (connect)
+        {
+            Message kill_job;
+            kill_job.msg = req_kill_job;
+            kill_job.encode_Header("server", "mom", "killjob");
+            socket.send(kill_job.encode_Message());
+            socket.closeConnection();
+        }
+    }
+}
+//KillJobHandler end
