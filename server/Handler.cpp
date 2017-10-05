@@ -122,7 +122,7 @@ void RunJobHandler::handle()
 
             if (!connect)
             {
-                continue;
+                break;
             }
 
             message.msg["MOTHERNODE"] = node.getnodename();
@@ -132,6 +132,7 @@ void RunJobHandler::handle()
         if (message.msg.count("MOTHERNODE") == 0)
         {
             // push_font to the joblist ??
+            Monitor::GetInstance()->setjobtofail(req_runjob["JOBID"][i].get<int>());
             continue;
         }
 

@@ -73,20 +73,16 @@ int main(int argc, char **argv)
     }
 
     string server_ip = "", server_port = "";
-    /*
+
     f.open("server.con");
     if (f.is_open())
     {
         f >> server_ip;
         f >> server_port;
     }
-    else
-    {
-        cout << "MOM ---> main(): Error! server.con not found." << endl;
-        exit(1);
-    }
+
     f.close();
-*/
+
     // Test socket port
     s_socket s;
     if (s.setConnection(mom_ip, mom_port) == 0)

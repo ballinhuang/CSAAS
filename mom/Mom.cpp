@@ -203,6 +203,7 @@ void Mom::run()
                 else
                 {
                     s->closeConnection();
+                    JobQueue::GetInstance()->addjob(request["JOBID"].get<int>(), p);
                     continue;
                 }
             }
@@ -217,7 +218,14 @@ void Mom::run()
 void Mom::sig_fork(int signo)
 {
     int stat;
-    while (waitpid(-1, &stat, WNOHANG) > 0)
-        ;
+    if (JobQueue::GetInstance()->i_am_jobstarter == false)
+    {
+        while (waitpid(-1, &stat, WNOHANG) > 0)
+            ;
+        JobQueue::GetInstance()->erasedownjob();
+        cout << "some job down" << endl;
+    }
+    else
+        return;
     return;
 }
