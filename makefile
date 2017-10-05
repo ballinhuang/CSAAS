@@ -10,5 +10,6 @@ componentbuild:
 	$(MAKE) -C scheduler
 	$(MAKE) -C subjob
 	$(MAKE) -C jobstate
+	$(MAKE) -C killjob
 clear:
 	$(MAKE) -C lib clean
