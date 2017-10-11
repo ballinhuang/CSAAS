@@ -59,7 +59,6 @@ void RunJobHandler::handle()
         return;
     }
     //ERROR CONCERN
-    Monitor::GetInstance()->notitfyschedualfinish();
     for (int i = 0; i < (int)req_runjob["JOBID"].size(); i++)
     {
 
@@ -123,7 +122,7 @@ void RunJobHandler::handle()
 
             if (!connect)
             {
-                continue;
+                break;
             }
 
             message.msg["MOTHERNODE"] = node.getnodename();
@@ -133,6 +132,7 @@ void RunJobHandler::handle()
         if (message.msg.count("MOTHERNODE") == 0)
         {
             // push_font to the joblist ??
+            Monitor::GetInstance()->setjobtofail(req_runjob["JOBID"][i].get<int>());
             continue;
         }
 
@@ -149,6 +149,7 @@ void RunJobHandler::handle()
         socket.closeConnection();
         Monitor::GetInstance()->setjobtorunning(req_runjob["JOBID"][i].get<int>(), message.msg["MOTHERNODE"].get<string>());
     }
+    Monitor::GetInstance()->notitfyschedualfinish();
 }
 
 //RunJobHandler end
@@ -204,9 +205,31 @@ void DoneJobHandler::handle()
     for (int i = 0; i < (int)req_done_job["COMPLETEJOB"].size(); i++)
     {
         Monitor::GetInstance()->setjobtocomplete(req_done_job["COMPLETEJOB"][i].get<int>());
+        Monitor::GetInstance()->notitfynewjob();
     }
 }
 //DoneJobHandler end
+
+//FailJobHandler start
+FailJobHandler::FailJobHandler(json request, s_socket *socket)
+{
+    s = socket;
+    req_fail_job = request;
+}
+
+void FailJobHandler::handle()
+{
+    if (req_fail_job.count("COMPLETEJOB") == 0)
+    {
+        return;
+    }
+    for (int i = 0; i < (int)req_fail_job["COMPLETEJOB"].size(); i++)
+    {
+        Monitor::GetInstance()->setjobtorunfail(req_fail_job["COMPLETEJOB"][i].get<int>());
+        Monitor::GetInstance()->notitfynewjob();
+    }
+}
+//FailJobHandler end
 
 //JobStateHandler start
 JobStateHandler::JobStateHandler(json request, s_socket *socket)
@@ -222,3 +245,70 @@ void JobStateHandler::handle()
     s->sendmessage(req_job_state.encode_Message());
 }
 //JobStateHandler end
+
+//KillJobHandler start
+KillJobHandler::KillJobHandler(json request, s_socket *socket)
+{
+    s = socket;
+    req_kill_job = request;
+}
+
+void KillJobHandler::handle()
+{
+    if (req_kill_job.count("JOBID") == 0)
+    {
+        return;
+    }
+    json jobinfo = Monitor::GetInstance()->getrunjobinfo(req_kill_job["JOBID"].get<int>());
+    if (jobinfo == NULL)
+        return;
+    Monitor::GetInstance()->setjobtorunfail(req_kill_job["JOBID"].get<int>());
+
+    Node node = Monitor::GetInstance()->getnodeinfo(jobinfo["MOTHERNODE"].get<string>());
+
+    c_socket socket;
+
+    if (socket.setConnection(node.getnodeip(), node.getnodeport()) == 0)
+    {
+        if (debug > 0)
+        {
+            if (debug == 1)
+                *debug_file << "Server ---> KillJobHandler handle(): setConnection() ERROR! " << endl;
+            else if (debug == 2)
+                cout << "Server ---> KillJobHandler handle(): setConnection() ERROR! " << endl;
+        }
+        return;
+    }
+    else
+    {
+        bool connect = false;
+        int retry = 0;
+        while (retry < 3)
+        {
+            if (socket.connect2server() == 0)
+            {
+                if (debug > 0)
+                {
+                    if (debug == 1)
+                        *debug_file << "Server ---> KillJobHandler handle(): connect2server() ERROR! " << endl;
+                    else if (debug == 2)
+                        cout << "Server ---> KillJobHandler handle(): connect2server() ERROR! " << endl;
+                }
+                this_thread::sleep_for(std::chrono::seconds(1));
+                retry++;
+                continue;
+            }
+            connect = true;
+            break;
+        }
+        if (connect)
+        {
+            Message kill_job;
+            kill_job.msg = req_kill_job;
+            kill_job.encode_Header("server", "mom", "killjob");
+            socket.send(kill_job.encode_Message());
+            socket.closeConnection();
+        }
+    }
+}
+//KillJobHandler end

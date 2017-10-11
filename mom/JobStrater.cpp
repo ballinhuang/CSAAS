@@ -16,6 +16,7 @@
 #include <array>
 
 #include "JobStrater.hpp"
+#include "JobQueue.hpp"
 #include "c_socket.hpp"
 #include <json.hpp>
 #include "Message.hpp"
@@ -50,6 +51,42 @@ string JobStrater::getsystemcall(const char *cmd)
 
 void JobStrater::start()
 {
+    JobQueue::GetInstance()->i_am_jobstarter = true;
+    /* UID GID */
+    struct passwd *user;
+    user = getpwnam(req_run_job["ENV"]["USER"].get<string>().c_str());
+    if (user == NULL)
+    {
+        //send fail job message
+        Message failjob_msg;
+        failjob_msg.initMessage();
+        c_socket socket;
+        int retry = 0;
+        while (retry < 5)
+        {
+            if (socket.setConnection(svr_ip, svr_port) == 0)
+            {
+                sleep(1);
+                retry++;
+                continue;
+            }
+            if (socket.connect2server() == 0)
+            {
+                sleep(1);
+                retry++;
+                continue;
+            }
+            break;
+        }
+        failjob_msg.msg["COMPLETEJOB"].push_back(req_run_job["JOBID"].get<int>());
+        failjob_msg.encode_Header("mom", "server", "failjob");
+        socket.send(failjob_msg.encode_Message());
+        socket.closeConnection();
+        return;
+    }
+    uid_t uid = user->pw_uid;
+    gid_t gid = user->pw_gid;
+
     /* Get env by mom if root assign user */
     if (req_run_job["ENV"].count("PATH") == 0)
     {
@@ -127,7 +164,31 @@ void JobStrater::start()
 
     if (!can_run)
     {
-        // reject job
+        //send fail job message
+        Message failjob_msg;
+        failjob_msg.initMessage();
+        c_socket socket;
+        int retry = 0;
+        while (retry < 5)
+        {
+            if (socket.setConnection(svr_ip, svr_port) == 0)
+            {
+                sleep(1);
+                retry++;
+                continue;
+            }
+            if (socket.connect2server() == 0)
+            {
+                sleep(1);
+                retry++;
+                continue;
+            }
+            break;
+        }
+        failjob_msg.msg["COMPLETEJOB"].push_back(req_run_job["JOBID"].get<int>());
+        failjob_msg.encode_Header("mom", "server", "failjob");
+        socket.send(failjob_msg.encode_Message());
+        socket.closeConnection();
         return;
     }
 
@@ -138,12 +199,6 @@ void JobStrater::start()
         else if (debug == 2)
             cout << "MOM ---> JobStrater handle(): Command can run." << endl;
     }
-
-    /* UID GID */
-    struct passwd *user;
-    user = getpwnam(req_run_job["ENV"]["USER"].get<string>().c_str());
-    uid_t uid = user->pw_uid;
-    gid_t gid = user->pw_gid;
 
     /* OUTPUT FILE */
     char rootdir[1024];

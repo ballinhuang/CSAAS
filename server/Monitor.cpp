@@ -133,7 +133,8 @@ void Monitor::setjobtocomplete(int jobid)
     runningtex.lock();
     completetex.lock();
     iter = runninglist.find(jobid);
-    if (iter == runninglist.end()) {
+    if (iter == runninglist.end())
+    {
         completetex.unlock();
         runningtex.unlock();
         return;
@@ -142,11 +143,14 @@ void Monitor::setjobtocomplete(int jobid)
     completelist[jobid] = iter->second;
     runninglist.erase(iter);
 
+    nodetex.lock();
     for (int i = 0; i < (int)completelist[jobid]["RUNNODE"].size(); i++)
     {
         it = nodelist.find(completelist[jobid]["RUNNODE"][i].get<string>());
         (it->second).setCPUcore((it->second).getnodeCPUcore() + completelist[jobid]["RUNNP"][i].get<int>());
     }
+    nodetex.unlock();
+
     completetex.unlock();
     runningtex.unlock();
 
@@ -186,6 +190,43 @@ void Monitor::setjobtofail(int jobid)
     }
 }
 
+void Monitor::setjobtorunfail(int jobid)
+{
+    map<int, json>::iterator iter;
+    runningtex.lock();
+    failtex.lock();
+    iter = runninglist.find(jobid);
+    if (iter == runninglist.end())
+    {
+        failtex.unlock();
+        runningtex.unlock();
+        return;
+    }
+    (iter->second)["JOBSTAT"] = "RUNFAIL";
+    faillist[jobid] = iter->second;
+    runninglist.erase(iter);
+
+    nodetex.lock();
+    map<std::string, Node>::iterator it;
+    for (int i = 0; i < (int)faillist[jobid]["RUNNODE"].size(); i++)
+    {
+        it = nodelist.find(faillist[jobid]["RUNNODE"][i].get<string>());
+        (it->second).setCPUcore((it->second).getnodeCPUcore() + faillist[jobid]["RUNNP"][i].get<int>());
+    }
+    nodetex.unlock();
+
+    failtex.unlock();
+    runningtex.unlock();
+
+    if (debug > 0)
+    {
+        if (debug == 1)
+            *debug_file << "Server ---> Monitor setjobtorunfail(): Move job to fial queue  jobid = " << jobid << " content = " << faillist[jobid].dump() << endl;
+        else if (debug == 2)
+            cout << "Server ---> Monitor setjobtorunfail(): Move job to fail queue  jobid = " << jobid << " content = " << faillist[jobid].dump() << endl;
+    }
+}
+
 json Monitor::getjobstat()
 {
     json result;
@@ -213,6 +254,22 @@ json Monitor::getjobstat()
         i++;
     }
     jobtex.unlock();
+    return result;
+}
+
+json Monitor::getrunjobinfo(int jobid)
+{
+    map<int, json>::iterator iter;
+    json result;
+    runningtex.lock();
+    iter = runninglist.find(jobid);
+    if (iter == runninglist.end())
+    {
+        runningtex.unlock();
+        return NULL;
+    }
+    result = iter->second;
+    runningtex.unlock();
     return result;
 }
 
@@ -276,6 +333,7 @@ json Monitor::getnodelist()
 {
     json result;
     int i = 0;
+    nodetex.lock();
     for (map<string, Node>::iterator it = nodelist.begin(); it != nodelist.end(); it++)
     {
         result["NODES"][i] = it->second.getnodename();
@@ -283,6 +341,7 @@ json Monitor::getnodelist()
         result["ONPS"][i] = it->second.getoriginalCPUcore();
         i++;
     }
+    nodetex.unlock();
     return result;
 }
 
@@ -311,7 +370,7 @@ json Monitor::getall()
     for (std::map<int, json>::iterator mi = faillist.begin(); mi != faillist.end(); mi++)
         all[mi->first] = mi->second;
     failtex.unlock();
-    completetex.unlock();    
+    completetex.unlock();
     runningtex.unlock();
     readytex.unlock();
     jobtex.unlock();
@@ -335,7 +394,8 @@ json Monitor::getall()
             if ((mi->second)["JOBSTAT"].get<string>() == "RUNNING" || (mi->second)["JOBSTAT"].get<string>() == "COMPLETE")
                 result["MOTHERNODE"][index] = (mi->second)["MOTHERNODE"];
         }
-        if (debug == 2) {
+        if (debug == 2)
+        {
             cout << "=========================================================================" << endl;
             cout << (mi->second).dump() << endl;
         }
