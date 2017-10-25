@@ -14,7 +14,7 @@ using json = nlohmann::json;
 
 int main(int argc, char **argv) {
     string ip = "", port = "", displayType = "", userName = "";
-    bool detailMode = false;
+    bool detailMode = false, root = false;
     int checkFlag = 0, jobID = -1;
 
     if(argc > 1) {
@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
                 i++;
                 port = string(argv[i]);
             }
-            else if(arg == "-j") {
+            else if(arg == "-id") {
                 i++;
                 jobID = atoi(argv[i]);
                 checkFlag++;
@@ -41,13 +41,13 @@ int main(int argc, char **argv) {
                     if(displayType[i] >= 'a' && displayType[i] <= 'z')
                         displayType[i] = displayType[i] - 'a' + 'A';
 
-                if(displayType != "DEBUG" && displayType != "COMPLETE" && displayType != "RUNNING" && displayType != "WAIT" && displayType != "FAIL") {
-                    cout << "JobState ---> main(): Error state " << endl;
+                if(displayType != "DEBUG" && displayType != "COMPLETE" && displayType != "RUNNING" && displayType != "WAIT" && displayType != "FAIL" && displayType != "RUNFAIL") {
+                    cout << "JobState ---> main(): Error status assign !" << endl;
                     exit(1);
                 }
                 checkFlag++;
             }
-            else if(arg == "-detail")
+            else if(arg == "-d")
                 detailMode = true;
             else {
                 cout << "JobState ---> main(): Error parameter " << arg << endl;
@@ -85,6 +85,8 @@ int main(int argc, char **argv) {
         exit(1);
     }
     userName = string(getenv("USER"));
+    if(userName == "root")
+        root = true;
 
     cc_socket csock;
     if(csock.setConnection(ip, port) != 1) {
@@ -107,16 +109,16 @@ int main(int argc, char **argv) {
 
     DisplayInterface *display;
     if(detailMode)
-        display = new DetailDisplay(list, userName);
+        display = new DetailDisplay(list, userName, root);
     else
-        display = new SimpleDisplay(list, userName);
+        display = new SimpleDisplay(list, userName, root);
 
     if(jobID != -1)
         display->displayByID(jobID);
     else if(displayType == "")
         display->displayState();
     else if(displayType == "DEBUG")
-        display->displayDebug();
+        display->displayAll();
     else
         display->displayOneType(displayType);
 
