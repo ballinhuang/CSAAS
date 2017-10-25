@@ -5,24 +5,21 @@
 using namespace std;
 using json = nlohmann::json;
 
-DetailDisplay::DetailDisplay(string list, string name) : DisplayInterface(list, name) {
+DetailDisplay::DetailDisplay(string list, string name, bool root) : DisplayInterface(list, name, root) {
 }
 
 void DetailDisplay::displayState() {
     cout.setf(ios::left);
     separatedLine();
     for(int i = 0; i < (int)joblist["JOBID"].size(); i++) {
-        if(joblist["JOBSTAT"][i].get<string>() == "COMPLETE" || joblist["JOBSTAT"][i].get<string>() == "FAIL" || (joblist["USER"][i].get<string>() != userName && userName != "root"))
+        if((joblist["USER"][i].get<string>() != userName && !root) || joblist["JOBSTAT"][i].get<string>() == "COMPLETE" || joblist["JOBSTAT"][i].get<string>() == "FAIL" || joblist["JOBSTAT"][i].get<string>() == "RUNFAIL")
             continue;
 
         noJob = false;
 
         cout << setw(15) << "Job ID" << joblist["JOBID"][i].get<int>() << endl;
-
         cout << setw(15) << "Job Name" << joblist["JOBNAME"][i].get<string>().substr(0, 45) << endl;
-        
         cout << setw(15) << "Job State" << joblist["JOBSTAT"][i].get<string>() << endl;
-
         cout << setw(15) << "User" << joblist["USER"][i].get<string>().substr(0, 45) << endl;
 
         if(joblist["JOBSTAT"][i].get<string>() == "RUNNING")
@@ -54,25 +51,22 @@ void DetailDisplay::displayOneType(string displayType) {
     cout.setf(ios::left);
     separatedLine();
     for(int i = 0; i < (int)joblist["JOBID"].size(); i++) {
-        if((joblist["JOBSTAT"][i].get<string>() != displayType && !(displayType == "RUNNING" && joblist["JOBSTAT"][i].get<string>() == "READY")) || (joblist["USER"][i].get<string>() != userName && userName != "root"))
+        if((joblist["USER"][i].get<string>() != userName && !root) || (joblist["JOBSTAT"][i].get<string>() != displayType && !(displayType == "RUNNING" && joblist["JOBSTAT"][i].get<string>() == "READY")))
             continue;
 
         noJob = false;
 
         cout << setw(15) << "Job ID" << joblist["JOBID"][i].get<int>() << endl;
-
         cout << setw(15) << "Job Name" << joblist["JOBNAME"][i].get<string>().substr(0, 45) << endl;
-        
         cout << setw(15) << "Job State" << joblist["JOBSTAT"][i].get<string>() << endl;
-
         cout << setw(15) << "User" << joblist["USER"][i].get<string>().substr(0, 45) << endl;
 
-        if(joblist["JOBSTAT"][i].get<string>() == "RUNNING")
+        if(joblist["JOBSTAT"][i].get<string>() == "RUNNING" || joblist["JOBSTAT"][i].get<string>() == "COMPLETE" || joblist["JOBSTAT"][i].get<string>() == "RUNFAIL")
             cout << setw(15) << "MotherNode" << joblist["MOTHERNODE"][i].get<string>().substr(0, 45) << endl;
         else if(joblist["JOBSTAT"][i].get<string>() == "READY")
             cout << setw(15) << "MotherNode" << joblist["RUNNODE"][i][0].get<string>().substr(0, 34) << "   (temporary)" << endl;
 
-            if(joblist["JOBSTAT"][i].get<string>() == "COMPLETE" || joblist["JOBSTAT"][i].get<string>() == "RUNNING" || joblist["JOBSTAT"][i].get<string>() == "READY") {
+        if(joblist["JOBSTAT"][i].get<string>() == "COMPLETE" || joblist["JOBSTAT"][i].get<string>() == "RUNNING" || joblist["JOBSTAT"][i].get<string>() == "READY" || joblist["JOBSTAT"][i].get<string>() == "RUNFAIL") {
             cout << setw(15) << "Nodes" << setw(25) << joblist["RUNNODE"][i][0].get<string>().substr(0, 20) << " ---> ";
             cout.setf(ios::right);
             cout << setw(4) << joblist["RUNNP"][i][0].get<int>() << " CPUs" << endl;
@@ -92,29 +86,26 @@ void DetailDisplay::displayOneType(string displayType) {
     noJobMessage();
 }
 
-void DetailDisplay::displayDebug() {
+void DetailDisplay::displayAll() {
     cout.setf(ios::left);
     separatedLine();
     for(int i = 0; i < (int)joblist["JOBID"].size(); i++) {
-        if(joblist["USER"][i].get<string>() != userName && userName != "root")
+        if(joblist["USER"][i].get<string>() != userName && !root)
             continue;
 
         noJob = false;
 
         cout << setw(15) << "Job ID" << joblist["JOBID"][i].get<int>() << endl;
-
         cout << setw(15) << "Job Name" << joblist["JOBNAME"][i].get<string>().substr(0, 45) << endl;
-        
         cout << setw(15) << "Job State" << joblist["JOBSTAT"][i].get<string>() << endl;
-
         cout << setw(15) << "User" << joblist["USER"][i].get<string>().substr(0, 45) << endl;
 
-        if(joblist["JOBSTAT"][i].get<string>() == "RUNNING" || joblist["JOBSTAT"][i].get<string>() == "COMPLETE")
+        if(joblist["JOBSTAT"][i].get<string>() == "RUNNING" || joblist["JOBSTAT"][i].get<string>() == "COMPLETE" || joblist["JOBSTAT"][i].get<string>() == "RUNFAIL")
             cout << setw(15) << "MotherNode" << joblist["MOTHERNODE"][i].get<string>().substr(0, 45) << endl;
         else if(joblist["JOBSTAT"][i].get<string>() == "READY")
             cout << setw(15) << "MotherNode" << joblist["RUNNODE"][i][0].get<string>().substr(0, 34) << "   (temporary)" << endl;
 
-        if(joblist["JOBSTAT"][i].get<string>() == "COMPLETE" || joblist["JOBSTAT"][i].get<string>() == "RUNNING" || joblist["JOBSTAT"][i].get<string>() == "READY") {
+        if(joblist["JOBSTAT"][i].get<string>() == "COMPLETE" || joblist["JOBSTAT"][i].get<string>() == "RUNNING" || joblist["JOBSTAT"][i].get<string>() == "READY" || joblist["JOBSTAT"][i].get<string>() == "RUNFAIL") {
             cout << setw(15) << "Nodes" << setw(25) << joblist["RUNNODE"][i][0].get<string>().substr(0, 20) << " ---> ";
             cout.setf(ios::right);
             cout << setw(4) << joblist["RUNNP"][i][0].get<int>() << " CPUs" << endl;
@@ -138,23 +129,20 @@ void DetailDisplay::displayByID(int ID) {
     cout.setf(ios::left);
     separatedLine();
     for(int i = 0; i < (int)joblist["JOBID"].size(); i++)
-        if(joblist["JOBID"][i].get<int>() == ID && (joblist["USER"][i].get<string>() == userName || userName == "root")) {
+        if((joblist["USER"][i].get<string>() == userName || root) && joblist["JOBID"][i].get<int>() == ID) {
             noJob = false;
             
             cout << setw(15) << "Job ID" << joblist["JOBID"][i].get<int>() << endl;
-
             cout << setw(15) << "Job Name" << joblist["JOBNAME"][i].get<string>().substr(0, 45) << endl;
-            
             cout << setw(15) << "Job State" << joblist["JOBSTAT"][i].get<string>() << endl;
-
             cout << setw(15) << "User" << joblist["USER"][i].get<string>().substr(0, 45) << endl;
 
-            if(joblist["JOBSTAT"][i].get<string>() == "RUNNING" || joblist["JOBSTAT"][i].get<string>() == "COMPLETE")
+            if(joblist["JOBSTAT"][i].get<string>() == "RUNNING" || joblist["JOBSTAT"][i].get<string>() == "COMPLETE" || joblist["JOBSTAT"][i].get<string>() == "RUNFAIL")
                 cout << setw(15) << "MotherNode" << joblist["MOTHERNODE"][i].get<string>().substr(0, 45) << endl;
             else if(joblist["JOBSTAT"][i].get<string>() == "READY")
                 cout << setw(15) << "MotherNode" << joblist["RUNNODE"][i][0].get<string>().substr(0, 34) << "   (temporary)" << endl;
 
-            if(joblist["JOBSTAT"][i].get<string>() == "COMPLETE" || joblist["JOBSTAT"][i].get<string>() == "RUNNING" || joblist["JOBSTAT"][i].get<string>() == "READY") {
+            if(joblist["JOBSTAT"][i].get<string>() == "COMPLETE" || joblist["JOBSTAT"][i].get<string>() == "RUNNING" || joblist["JOBSTAT"][i].get<string>() == "READY" || joblist["JOBSTAT"][i].get<string>() == "RUNFAIL") {
                 cout << setw(15) << "Nodes" << setw(25) << joblist["RUNNODE"][i][0].get<string>().substr(0, 20) << " ---> ";
                 cout.setf(ios::right);
                 cout << setw(4) << joblist["RUNNP"][i][0].get<int>() << " CPUs" << endl;
@@ -168,9 +156,12 @@ void DetailDisplay::displayByID(int ID) {
                 }
             }
 
+            separatedLine();
             break;
         }
-    separatedLine();
     cout.unsetf(ios::left);
-    noJobMessage();
+    if(noJob) {
+        cout << "This ID does not exist or this job is not yours" << endl;
+        separatedLine();
+    }
 }

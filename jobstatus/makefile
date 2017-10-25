@@ -8,10 +8,10 @@ OBJS:=$(subst .cpp,.o,$(SRCS))
 RM:=rm -f
 
 all:
-	$(MAKE) jobstate
+	$(MAKE) jstat
 	$(MAKE) clean
 
-jobstate: $(OBJS) $(MODEL)
+jstat: $(OBJS) $(MODEL)
 	@echo "------ Linking ------" && \
 	$(CC) $(CPPFLAGS) $(LIB) -I ${INCLUDE} $^ -o $@ && \
 	echo  "------ Success ------" || echo "------ Fail! ------"
