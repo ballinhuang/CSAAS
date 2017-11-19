@@ -132,7 +132,8 @@ void RunJobHandler::handle()
         if (message.msg.count("MOTHERNODE") == 0)
         {
             // push_font to the joblist ??
-            Monitor::GetInstance()->setjobtofail(req_runjob["JOBID"][i].get<int>());
+            Monitor::GetInstance()->setjobtorunning(req_runjob["JOBID"][i].get<int>(), "None");
+            Monitor::GetInstance()->setjobtorunfail(req_runjob["JOBID"][i].get<int>());
             continue;
         }
 
