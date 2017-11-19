@@ -8,10 +8,10 @@ using namespace std;
 
 class DetailDisplay : public DisplayInterface {
     public:
-        DetailDisplay(string, string);
+        DetailDisplay(string, string, bool);
         void displayState();
         void displayOneType(string);
-        void displayDebug();
+        void displayAll();
         void displayByID(int);
 };
 

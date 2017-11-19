@@ -7,12 +7,14 @@ DisplayInterface::DisplayInterface() {
     joblist = NULL;
     userName = "";
     noJob = true;
+    root = false;
 }
 
-DisplayInterface::DisplayInterface(string list, string name) {
+DisplayInterface::DisplayInterface(string list, string name, bool rootFlag) {
     joblist = json::parse(list);
     userName = name;
     noJob = true;
+    root = rootFlag;
 }
 
 void DisplayInterface::noJobMessage() {
