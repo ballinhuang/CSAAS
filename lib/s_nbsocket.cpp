@@ -2,14 +2,13 @@
 #include <iostream>
 #include <cstdlib>
 #include <string>
-#include <cstring>
 #include <cstdio>
 #include <unistd.h>
+#include <cstring>
 using namespace std;
 
-int s_socket::setConnection(string ip, string port)
+int s_nbsocket::setConnection(string ip, string port)
 {
-
     memset(&server_addr, '\0', sizeof(struct sockaddr_in));
     server_addr.sin_addr.s_addr = INADDR_ANY;
     server_addr.sin_port = htons(stoi(port));
@@ -24,84 +23,172 @@ int s_socket::setConnection(string ip, string port)
     if (setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) == -1)
     {
         close(sock_fd);
-        sock_fd = -3;
         return 0;
     }
-
+    /* Set socket to be nonblocking.*/
+    if (ioctl(sock_fd, FIONBIO, (char *)&on) < 0)
+    {
+        close(sock_fd);
+        return 0;
+    }
     if (bind(sock_fd, (struct sockaddr *)&server_addr, sizeof(struct sockaddr)) == -1)
     {
+        close(sock_fd);
         return 0;
     }
 
-    if (listen(sock_fd, 1) == -1)
+    if (listen(sock_fd, 32) == -1)
     {
+        close(sock_fd);
         return 0;
+    }
+
+    if ((efd = epoll_create1(0)) == -1)
+    {
+        close(sock_fd);
+        return 0;
+    }
+    event.data.fd = sock_fd;
+    event.events = EPOLLIN | EPOLLET;
+    if (epoll_ctl(efd, EPOLL_CTL_ADD, sock_fd, &event) == -1)
+    {
+        close(sock_fd);
+        return 0;
+    }
+
+    return 1;
+}
+
+int s_nbsocket::acceptClinet()
+{
+    while (true)
+    {
+        memset(&client_addr, '\0', sizeof(struct sockaddr_in));
+        int sin_size = sizeof(struct sockaddr_in);
+        int fd;
+        fd = accept(sock_fd, (struct sockaddr *)&client_addr, (socklen_t *)&sin_size);
+        if (fd == -1)
+        {
+            break;
+        }
+        event.data.fd = fd;
+        event.events = EPOLLIN | EPOLLET;
+        if (epoll_ctl(efd, EPOLL_CTL_ADD, fd, &event) == -1)
+        {
+            close(fd);
+            return 0;
+        }
     }
     return 1;
 }
 
-int s_socket::acceptClinet()
+vector<Event> *s_nbsocket::getevent()
 {
-    memset(&client_addr, '\0', sizeof(struct sockaddr_in));
-    int sin_size = sizeof(struct sockaddr_in);
-    if ((conn_port = accept(sock_fd, (struct sockaddr *)&client_addr, (socklen_t *)&sin_size)) == -1)
+    vector<Event> *ioevents = new vector<Event>();
+    struct epoll_event *events;
+    events = (epoll_event *)calloc(128, sizeof event);
+    int io_ready;
+    io_ready = epoll_wait(efd, events, 128, -1);
+    for (int i = 0; i < io_ready; i++)
     {
-        return 0;
+        if ((events[i].events & EPOLLERR) ||
+            (events[i].events & EPOLLHUP) ||
+            (!(events[i].events & EPOLLIN)))
+        {
+            close(events[i].data.fd);
+            continue;
+        }
+        else if (events[i].data.fd == sock_fd)
+        {
+            if (acceptClinet() == 0)
+            {
+                return NULL;
+            }
+        }
+        else
+        {
+            Event ev;
+            ev.socket_fd = events[i].data.fd;
+            string msg = readmessage(events[i].data.fd);
+            if (msg != "")
+            {
+                ev.data = msg;
+                ioevents->push_back(ev);
+            }
+        }
     }
-    return 1;
+    return ioevents;
 }
 
-string s_socket::readmessage()
+string s_nbsocket::readmessage(int fd)
 {
-    int size = receivehendshack();
+    int size = receivehendshack(fd);
+    if (size == 0)
+    {
+        return "";
+    }
     string result = "";
     char *buf = (char *)malloc(sizeof(char) * (size + 1));
     memset(buf, 0, size + 1);
-    read(conn_port, buf, (size_t)size);
+    read(fd, buf, (size_t)size);
     result = buf;
     memset(buf, 0, size + 1);
     free(buf);
     return result;
 }
 
-int s_socket::receivehendshack()
+int s_nbsocket::receivehendshack(int fd)
 {
     char num[10];
-    read(conn_port, num, sizeof(num));
+    int rc;
+    rc = read(fd, num, sizeof(num));
+    if (rc == 0)
+    {
+        //close
+        close(fd);
+        return 0;
+    }
+    else if (rc < 0)
+    {
+        //error
+        close(fd);
+        return 0;
+    }
     int size = atoi(num);
     return size;
 }
 
-void s_socket::sendmessage(string msg)
+void s_nbsocket::sendmessage(int fd, string msg)
 {
-    sendhendshack(msg.size());
+    sendhendshack(fd, msg.size());
     char *buf = (char *)malloc(sizeof(char) * (msg.size() + 1));
     memset(buf, 0, msg.size() + 1);
     strcpy(buf, msg.c_str());
-    write(conn_port, buf, msg.size());
+    write(fd, buf, msg.size());
     memset(buf, 0, msg.size() + 1);
     free(buf);
 }
 
-void s_socket::sendhendshack(int size)
+void s_nbsocket::sendhendshack(int fd, int size)
 {
     char num[10];
     sprintf(num, "%d", size);
-    write(conn_port, num, sizeof(num));
+    write(fd, num, sizeof(num));
 }
 
-void s_socket::closebind()
+void s_nbsocket::closebind()
 {
     close(sock_fd);
 }
 
-void s_socket::closeConnection()
+void s_nbsocket::closeConnection(int fd)
 {
-    close(conn_port);
+    close(fd);
 }
-
+/*
 void s_socket::setacceptreuse()
 {
     int sockoptval = 1;
     setsockopt(conn_port, SOL_SOCKET, SO_REUSEADDR, (void *)&sockoptval, sizeof(sockoptval));
 }
+*/

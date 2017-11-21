@@ -1,16 +1,18 @@
 CC := g++ -std=c++11
 CPPFLAGS := -Wall -O2
-INCLUDE := ../lib
+INCLUDE := ../../lib
 LIB := -pthread
 SRCS := $(shell ls *.cpp)
+MODEL := ../../lib/s_nbsocket.o
 OBJS:=$(subst .cpp,.o,$(SRCS))
 RM:=rm -f
 
-.PHONY: lib
+all: s_nbserver clean
 
-all: lib
-
-lib: $(OBJS)
+s_nbserver: $(OBJS) $(MODEL)
+	@echo "------ Linking ------" && \
+	$(CC) $(CPPFLAGS) $(LIB) -I ${INCLUDE} $^ -o $@ && \
+	echo  "------ Success ------" || echo "------ Fail! ------"
 
 %.o: %.cpp
 	@echo "------ Compile >> " $^ "to" $@ && \
