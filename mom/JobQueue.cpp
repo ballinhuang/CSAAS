@@ -38,7 +38,7 @@ void JobQueue::addjob(int jobid, int pid)
 {
     jobqueuetex.lock();
     jobqueue[jobid] = pid;
-    cout << "ADD " << jobid << endl;
+    //cout << "ADD " << jobid << endl;
     jobqueuetex.unlock();
 }
 
@@ -58,14 +58,14 @@ void JobQueue::erasedownjob()
     {
         map<int, int>::iterator iter;
         iter = jobqueue.find(list["COMPLETEJOB"][i].get<int>());
-        cout << "erase " << iter->first << endl;
+        //cout << "erase " << iter->first << endl;
         jobqueue.erase(iter);
     }
 
     for (map<int, int>::iterator it = jobqueue.begin(); it != jobqueue.end(); it++)
     {
 
-        cout << "all" << it->first << " " << it->second << endl;
+        //cout << "all" << it->first << " " << it->second << endl;
     }
     jobqueuetex.unlock();
     return;
@@ -80,7 +80,7 @@ void JobQueue::killjob(int jobid)
         map<int, int>::iterator iter;
         iter = jobqueue.find(jobid);
         jobqueue.erase(iter);
-        cout << "Kill " << jobid << endl;
+        //cout << "Kill " << jobid << endl;
     }
     jobqueuetex.unlock();
 }

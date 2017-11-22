@@ -223,7 +223,7 @@ void Mom::sig_fork(int signo)
         while (waitpid(-1, &stat, WNOHANG) > 0)
             ;
         JobQueue::GetInstance()->erasedownjob();
-        cout << "some job down" << endl;
+        //cout << "some job down" << endl;
     }
     else
         return;

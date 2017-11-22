@@ -219,7 +219,7 @@ main(int argc, char *argv[])
                     /**********************************************/
                     /* Echo the data back to the client           */
                     /**********************************************/
-                    rc = send(events[i].data.fd, buffer, len, 0);
+                    rc = write(events[i].data.fd, buffer, len);
                     if (rc < 0)
                     {
                         perror("  send() failed");

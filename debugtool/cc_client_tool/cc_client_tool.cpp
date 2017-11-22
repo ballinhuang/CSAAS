@@ -18,7 +18,7 @@ int main(int argc, char **argv)
         exit(1);
     }
     ThreadPool pool(10);
-    for (int i = 0; i < 10000; i++)
+    for (int i = 0; i < 10; i++)
     {
         pool.enqueue([i, ip, port] {
             cc_socket cs;
@@ -42,13 +42,17 @@ int main(int argc, char **argv)
                 cerr << i << " Error at Hello2" << endl;
             }
             cs.send("Hello3");
-            back = cs.receive();
+            //back = cs.receive();
             //cout << back << endl;
+            /*
             if (back != "Hello3")
             {
                 cerr << i << " Error at Hello3" << endl;
             }
+            */
             cs.closeConnection();
+            while (1)
+                ;
         });
     }
 }

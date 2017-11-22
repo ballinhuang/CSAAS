@@ -71,6 +71,11 @@ int s_nbsocket::acceptClinet()
         {
             break;
         }
+        if (make_socket_non_blocking(fd) == -1)
+        {
+            closeConnection(fd);
+            continue;
+        }
         event.data.fd = fd;
         event.events = EPOLLIN | EPOLLET;
         if (epoll_ctl(efd, EPOLL_CTL_ADD, fd, &event) == -1)
@@ -122,18 +127,28 @@ vector<Event> *s_nbsocket::getevent()
 
 string s_nbsocket::readmessage(int fd)
 {
-    int size = receivehendshack(fd);
-    if (size == 0)
-    {
-        return "";
-    }
     string result = "";
-    char *buf = (char *)malloc(sizeof(char) * (size + 1));
-    memset(buf, 0, size + 1);
-    read(fd, buf, (size_t)size);
-    result = buf;
-    memset(buf, 0, size + 1);
-    free(buf);
+    int size;
+    do
+    {
+        size = receivehendshack(fd);
+        if (size == 0)
+        {
+            break;
+        }
+        else if (size == -1)
+        {
+            closeConnection(fd);
+            break;
+        }
+        char *buf = (char *)malloc(sizeof(char) * (size + 1));
+        memset(buf, 0, size + 1);
+        while (read(fd, buf, (size_t)size) != (size_t)size)
+            ;
+        result = buf;
+        memset(buf, 0, size + 1);
+        free(buf);
+    } while (true);
     return result;
 }
 
@@ -141,23 +156,19 @@ int s_nbsocket::receivehendshack(int fd)
 {
     char num[10];
     int rc;
-    rc = read(fd, num, sizeof(num));
+    rc = recv(fd, num, sizeof(num), 0);
     if (rc == 0)
     {
         //close
-        close(fd);
-        return 0;
+        return -1;
     }
     else if (rc < 0)
     {
-        //error
-        close(fd);
         return 0;
     }
     int size = atoi(num);
     return size;
 }
-
 void s_nbsocket::sendmessage(int fd, string msg)
 {
     sendhendshack(fd, msg.size());
@@ -192,3 +203,25 @@ void s_socket::setacceptreuse()
     setsockopt(conn_port, SOL_SOCKET, SO_REUSEADDR, (void *)&sockoptval, sizeof(sockoptval));
 }
 */
+
+int s_nbsocket::make_socket_non_blocking(int sfd)
+{
+    int flags, s;
+
+    flags = fcntl(sfd, F_GETFL, 0);
+    if (flags == -1)
+    {
+        perror("fcntl");
+        return -1;
+    }
+
+    flags |= O_NONBLOCK;
+    s = fcntl(sfd, F_SETFL, flags);
+    if (s == -1)
+    {
+        perror("fcntl");
+        return -1;
+    }
+
+    return 0;
+}

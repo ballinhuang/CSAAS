@@ -9,6 +9,7 @@
 #include "Observer.hpp"
 #include "s_socket.hpp"
 #include "HandlerFactory.hpp"
+#include "Event.hpp"
 
 class Server : public Observer
 {
@@ -26,7 +27,7 @@ private:
   int contact_scheduler();
   void check_schedule();
   static void start_accept_thread(std::string, std::string, ThreadPool *);
-  static void readrequest(s_socket *, HandlerFactory *);
+  static void readrequest(Event, HandlerFactory *);
   ThreadPool *request_pool;
   ThreadPool *server_pool;
   bool do_schedual = false;

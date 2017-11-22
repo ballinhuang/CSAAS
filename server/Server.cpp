@@ -4,6 +4,8 @@
 #include "c_socket.hpp"
 #include "Message.hpp"
 #include <unistd.h>
+#include "s_nbsocket.hpp"
+#include "s_socket.hpp"
 
 using json = nlohmann::json;
 using namespace std;
@@ -70,99 +72,6 @@ void Server::attach_success()
     }
 }
 
-void Server::readrequest(s_socket *s, HandlerFactory *factory)
-{
-    if (debug > 0)
-    {
-        if (debug == 1)
-            *debug_file << "Server ---> Server readrequest():Start read request." << endl;
-        else if (debug == 2)
-            cout << "Server ---> Server readrequest():Start read request." << endl;
-    }
-
-    while (1)
-    {
-        string res = "";
-        res = s->readmessage();
-        if (res == "")
-        {
-            break;
-        }
-        if (debug > 0)
-        {
-            if (debug == 1)
-                *debug_file << "Server ---> Server readrequest():Receive request = " << endl
-                            << res << endl;
-            else if (debug == 2)
-                cout << "Server ---> Server readrequest():Receive request = " << endl
-                     << res << endl;
-        }
-        json request = json::parse(res);
-        IHandler *handler = factory->getHandler(request, s);
-        if (handler == NULL)
-        {
-            break;
-        }
-        handler->handle();
-        if (debug > 0)
-        {
-            if (debug == 1)
-                *debug_file << "Server ---> Server readrequest():End read request." << endl;
-            else if (debug == 2)
-                cout << "Server ---> Server readrequest():End read request." << endl;
-        }
-    }
-    s->closeConnection();
-}
-
-void Server::start_accept_thread(string ip, string port, ThreadPool *pool)
-{
-    pool = new ThreadPool(10);
-    HandlerFactory *factory = new HandlerFactory();
-    while (1)
-    {
-        if (debug > 0)
-        {
-            if (debug == 1)
-                *debug_file << "Server ---> Server start_accept_thread(): Creat new socket." << endl;
-            else if (debug == 2)
-                cout << "Server ---> Server start_accept_thread(): Creat new socket." << endl;
-        }
-        s_socket *s = new s_socket();
-        if (s->setConnection(ip, port) != 1)
-        {
-            if (debug > 0)
-            {
-                if (debug == 1)
-                    *debug_file << "Server ---> Server start_accept_thread(): setConnection() Error!" << endl;
-                else if (debug == 2)
-                    cout << "Server ---> Server start_accept_thread(): setConnection() Error!" << endl;
-            }
-            continue;
-        }
-        if (s->acceptClinet())
-        {
-            if (debug > 0)
-            {
-                if (debug == 1)
-                    *debug_file << "Server ---> Server start_accept_thread(): Accept client success." << endl;
-                else if (debug == 2)
-                    cout << "Server ---> Server start_accept_thread(): Accept client success." << endl;
-            }
-            s->setacceptreuse();
-            s->closebind();
-            pool->enqueue(&readrequest, s, factory);
-            if (debug > 0)
-            {
-                if (debug == 1)
-                    *debug_file << "Server ---> Server start_accept_thread(): Enque readrequest() to process_pool success." << endl;
-                else if (debug == 2)
-                    cout << "Server ---> Server start_accept_thread(): Enque readrequest() to process_pool success." << endl;
-            }
-        }
-    }
-}
-
 void Server::check_schedule()
 {
     now_time = time(NULL);
@@ -179,6 +88,46 @@ void Server::check_schedule()
         do_schedual = true;
         do_schedual_tex.unlock();
     }
+}
+
+void Server::start_accept_thread(string ip, string port, ThreadPool *pool)
+{
+    pool = new ThreadPool(10);
+    HandlerFactory *factory = new HandlerFactory();
+    s_nbsocket *s = new s_nbsocket();
+    vector<Event> *events;
+    if (s->setConnection(ip, port) != 1)
+    {
+        if (debug > 0)
+        {
+            if (debug == 1)
+                *debug_file << "Server ---> Server start_accept_thread(): setConnection() Error!" << endl;
+            else if (debug == 2)
+                cout << "Server ---> Server start_accept_thread(): setConnection() Error!" << endl;
+        }
+    }
+    while (true)
+    {
+        events = s->getevent();
+        for (vector<Event>::iterator it = events->begin(); it != events->end(); it++)
+        {
+            pool->enqueue(&readrequest, *it, factory);
+        }
+    }
+}
+
+void Server::readrequest(Event event, HandlerFactory *factory)
+{
+    if (event.data == "")
+        return;
+    json request = json::parse(event.data);
+    s_socket *s = new s_socket();
+    s->setconn_port(event.socket_fd);
+    cout << event.socket_fd << " " << request["SENDER"] << " " << request["REQUEST"] << endl;
+    IHandler *handler = factory->getHandler(request, s);
+    if (handler == NULL)
+        return;
+    handler->handle();
 }
 
 void Server::run()
@@ -301,3 +250,98 @@ string Server::getsvr_port()
 {
     return svr_port;
 }
+
+/*
+void Server::readrequest(s_socket *s, HandlerFactory *factory)
+{
+    if (debug > 0)
+    {
+        if (debug == 1)
+            *debug_file << "Server ---> Server readrequest():Start read request." << endl;
+        else if (debug == 2)
+            cout << "Server ---> Server readrequest():Start read request." << endl;
+    }
+
+    while (1)
+    {
+        string res = "";
+        res = s->readmessage();
+        if (res == "")
+        {
+            break;
+        }
+        if (debug > 0)
+        {
+            if (debug == 1)
+                *debug_file << "Server ---> Server readrequest():Receive request = " << endl
+                            << res << endl;
+            else if (debug == 2)
+                cout << "Server ---> Server readrequest():Receive request = " << endl
+                     << res << endl;
+        }
+        json request = json::parse(res);
+        IHandler *handler = factory->getHandler(request, s);
+        if (handler == NULL)
+        {
+            break;
+        }
+        handler->handle();
+        if (debug > 0)
+        {
+            if (debug == 1)
+                *debug_file << "Server ---> Server readrequest():End read request." << endl;
+            else if (debug == 2)
+                cout << "Server ---> Server readrequest():End read request." << endl;
+        }
+    }
+    s->closeConnection();
+}
+
+void Server::start_accept_thread(string ip, string port, ThreadPool *pool)
+{
+    pool = new ThreadPool(10);
+    HandlerFactory *factory = new HandlerFactory();
+    while (1)
+    {
+        if (debug > 0)
+        {
+            if (debug == 1)
+                *debug_file << "Server ---> Server start_accept_thread(): Creat new socket." << endl;
+            else if (debug == 2)
+                cout << "Server ---> Server start_accept_thread(): Creat new socket." << endl;
+        }
+        s_socket *s = new s_socket();
+        if (s->setConnection(ip, port) != 1)
+        {
+            if (debug > 0)
+            {
+                if (debug == 1)
+                    *debug_file << "Server ---> Server start_accept_thread(): setConnection() Error!" << endl;
+                else if (debug == 2)
+                    cout << "Server ---> Server start_accept_thread(): setConnection() Error!" << endl;
+            }
+            continue;
+        }
+        if (s->acceptClinet())
+        {
+            if (debug > 0)
+            {
+                if (debug == 1)
+                    *debug_file << "Server ---> Server start_accept_thread(): Accept client success." << endl;
+                else if (debug == 2)
+                    cout << "Server ---> Server start_accept_thread(): Accept client success." << endl;
+            }
+            s->setacceptreuse();
+            s->closebind();
+            pool->enqueue(&readrequest, s, factory);
+            if (debug > 0)
+            {
+                if (debug == 1)
+                    *debug_file << "Server ---> Server start_accept_thread(): Enque readrequest() to process_pool success." << endl;
+                else if (debug == 2)
+                    cout << "Server ---> Server start_accept_thread(): Enque readrequest() to process_pool success." << endl;
+            }
+        }
+    }
+}
+*/

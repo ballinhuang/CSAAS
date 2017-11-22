@@ -29,6 +29,7 @@ public:
 private:
   int receivehendshack(int fd);
   void sendhendshack(int fd, int size);
+  int make_socket_non_blocking(int);
   struct sockaddr_in server_addr;
   struct sockaddr_in client_addr;
   struct epoll_event event;
