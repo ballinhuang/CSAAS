@@ -81,7 +81,7 @@ void RunJobHandler::handle()
         }
 
         message.encode_Header("server", "mom", "runjob");
-        this_thread::sleep_for(std::chrono::seconds(1));
+        //this_thread::sleep_for(std::chrono::seconds(1));
 
         for (int j = 0; j < (int)(jobinfo["RUNNODE"].size()); j++)
         {

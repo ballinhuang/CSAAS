@@ -123,7 +123,7 @@ void Server::readrequest(Event event, HandlerFactory *factory)
     json request = json::parse(event.data);
     s_socket *s = new s_socket();
     s->setconn_port(event.socket_fd);
-    cout << event.socket_fd << " " << request["SENDER"] << " " << request["REQUEST"] << endl;
+    //cout << event.socket_fd << " " << request["SENDER"] << " " << request["REQUEST"] << endl;
     IHandler *handler = factory->getHandler(request, s);
     if (handler == NULL)
         return;

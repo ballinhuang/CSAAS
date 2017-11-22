@@ -47,7 +47,118 @@ void Mom::attach_success()
             cout << "MOM ---> MOM attach_success():Attach success." << endl;
     }
 }
+void Mom::run()
+{
+    mom_socket = new s_nbsocket();
+    request_pool = new ThreadPool(10);
+    MomHandlerFactory *factory = new MomHandlerFactory();
+    vector<Event> *events;
+    if (mom_socket->setConnection(mom_ip, mom_port) != 1)
+    {
+        if (debug > 0)
+        {
+            if (debug == 1)
+                *debug_file << "MOM ---> Mom run(): setConnection() Error!" << endl;
+            else if (debug == 2)
+                cout << "MOM ---> Mom run(): setConnection() Error!" << endl;
+        }
+        exit(1);
+    }
+    while (true)
+    {
+        events = mom_socket->getevent();
+        for (vector<Event>::iterator it = events->begin(); it != events->end(); it++)
+        {
+            if (it->data == "")
+                continue;
+            json request = json::parse(it->data);
+            //cout << it->socket_fd << " " << request["SENDER"] << " " << request["REQUEST"] << endl;
+            s_socket *req_socket = new s_socket();
+            req_socket->setconn_port(it->socket_fd);
+            readrequest(req_socket, factory, request);
+        }
+    }
+}
+void Mom::readrequest(s_socket *s, MomHandlerFactory *factory, json request)
+{
+    if (request["SENDER"].get<std::string>() == "server" &&
+        request["RECEIVER"].get<std::string>() == "mom" &&
+        request["REQUEST"].get<std::string>() == "initmom")
+    {
+        if (request.count("SERVERIP") == 1 && request.count("SERVERPORT") == 1)
+        {
+            set_server_attr(request["SERVERIP"].get<std::string>(), request["SERVERPORT"].get<std::string>());
+            if (debug > 0)
+            {
+                if (debug == 1)
+                    *debug_file << "MOM ---> Mom run(): init success." << endl;
+                else if (debug == 2)
+                    cout << "MOM ---> Mom run(): init success." << endl;
+            }
+            return;
+        }
+    }
+    else if (svr_ip == "" || svr_port == "")
+    {
+        return;
+    }
 
+    else if (request["SENDER"].get<std::string>() == "server" &&
+             request["RECEIVER"].get<std::string>() == "mom" &&
+             request["REQUEST"].get<std::string>() == "runjob")
+    {
+        signal(SIGCHLD, sig_fork);
+        pid_t p;
+        p = fork();
+        if (p < 0)
+        {
+            if (debug > 0)
+            {
+                if (debug == 1)
+                    *debug_file << "MOM ---> run(): fork() fail!" << endl;
+                else if (debug == 2)
+                    cout << "MOM ---> run(): fork() fail!" << endl;
+            }
+        }
+        else if (p == 0)
+        {
+            mom_socket->closebind();
+            JobStrater strater(request, svr_ip, svr_port);
+            strater.start();
+            exit(1);
+        }
+        else
+        {
+            JobQueue::GetInstance()->addjob(request["JOBID"].get<int>(), p);
+        }
+    }
+
+    else
+    {
+        IHandler *handler = factory->getHandler(request, s);
+        if (handler == NULL)
+        {
+            return;
+        }
+        handler->handle();
+    }
+}
+void Mom::sig_fork(int signo)
+{
+    int stat;
+    if (JobQueue::GetInstance()->i_am_jobstarter == false)
+    {
+        while (waitpid(-1, &stat, WNOHANG) > 0)
+            ;
+        JobQueue::GetInstance()->erasedownjob();
+        //cout << "some job down" << endl;
+    }
+    else
+        return;
+    return;
+}
+
+/*
 void Mom::readrequest(s_socket *s, MomHandlerFactory *factory, json request)
 {
     if (debug > 0)
@@ -214,18 +325,4 @@ void Mom::run()
         }
     }
 }
-
-void Mom::sig_fork(int signo)
-{
-    int stat;
-    if (JobQueue::GetInstance()->i_am_jobstarter == false)
-    {
-        while (waitpid(-1, &stat, WNOHANG) > 0)
-            ;
-        JobQueue::GetInstance()->erasedownjob();
-        //cout << "some job down" << endl;
-    }
-    else
-        return;
-    return;
-}
+*/
