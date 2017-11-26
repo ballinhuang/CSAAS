@@ -23,7 +23,7 @@ void scheduler_service::do_schedule(string server_ip, string server_port)
     {
         return;
     }
-    IScheHandler *ScheHandler = factory.getScheHandler(scheduler, socket);
+    IScheHandler *ScheHandler = factory->getScheHandler(scheduler, socket);
     if (ScheHandler == NULL)
         return;
     ScheHandler->handleschedule();
@@ -64,21 +64,18 @@ void scheduler_service::handlerequest(json request)
         server_port = request["PORT"].get<std::string>();
         if (server_ip == "" || server_port == "")
         {
-            if (debug == 1)
-                *debug_file << "Scheduler ---> main_loop() : request ip port is null" << endl;
-            else if (debug == 2)
-                cout << "Scheduler ---> main_loop() : request ip port is null" << endl;
+            return;
         }
         do_schedule(server_ip, server_port);
     }
     else if (request["SENDER"].get<std::string>() == "server" &&
              request["RECEIVER"].get<std::string>() == "scheduler" &&
-             request["REQUEST"].get<std::string>() == "change_mode"))
-        {
-            //change schedule mode
-            string mode = request["MODE"].get<std::string>();
-            set_mode(mode);
-        }
+             request["REQUEST"].get<std::string>() == "change_mode")
+    {
+        //change schedule mode
+        string mode = request["MODE"].get<std::string>();
+        set_mode(mode);
+    }
 }
 
 void scheduler_service::set_mode(string mode)

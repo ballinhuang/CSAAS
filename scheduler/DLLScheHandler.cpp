@@ -3,6 +3,8 @@
 #include <fstream>
 #include "Message.hpp"
 
+using namespace std;
+
 extern int debug;
 extern ofstream *debug_file;
 
@@ -10,8 +12,8 @@ using json = nlohmann::json;
 
 DLLScheHandler::DLLScheHandler(IScheduler *scheduler, cc_socket *socket)
 {
-    this.scheduler = scheduler;
-    this.socket = socket;
+    this->scheduler = scheduler;
+    this->socket = socket;
 }
 
 void DLLScheHandler::handleschedule()

@@ -90,7 +90,7 @@ int main(int argc, char **argv)
     }
     socket->closebind();
 
-    scheduler_service *service = new scheduler_service(schedule_mode, server_ip, server_port);
+    scheduler_service *service = new scheduler_service(schedule_mode, scheduler_ip, scheduler_port);
 
     pid_t pid = fork();
     if (pid == -1)
