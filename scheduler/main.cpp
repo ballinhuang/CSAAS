@@ -55,13 +55,13 @@ int main(int argc, char **argv)
             }
         }
     }
-
+    /*
     if (schedule_mode == "")
     {
         cout << "No choose schedule mode" << endl;
         exit(1);
     }
-
+    */
     if ((scheduler_ip == "" && scheduler_port != "") || (scheduler_ip != "" && scheduler_port == ""))
     {
         cout << "Scheduler ---> main(): Error! -i -p must be used at the same time." << endl;
@@ -88,6 +88,9 @@ int main(int argc, char **argv)
         cout << "-1";
         return 0;
     }
+    socket->closebind();
+
+    scheduler_service *service = new scheduler_service(schedule_mode, server_ip, server_port);
 
     pid_t pid = fork();
     if (pid == -1)
@@ -101,6 +104,9 @@ int main(int argc, char **argv)
         return 0;
     }
 
+    service->startservice();
+
+    /*
     while (1)
     {
         if (socket->acceptClinet() == 1)
@@ -130,4 +136,5 @@ int main(int argc, char **argv)
             }
         }
     }
+    */
 }

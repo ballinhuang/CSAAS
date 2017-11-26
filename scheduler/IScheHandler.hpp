@@ -3,8 +3,8 @@
 
 class IScheHandler
 {
-    public:
+  public:
     virtual void handleschedule() = 0;
-}; 
+};
 
 #endif
