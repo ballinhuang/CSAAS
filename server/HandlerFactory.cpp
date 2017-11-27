@@ -137,6 +137,22 @@ IHandler *HandlerFactory::getHandler(json request, s_socket *s)
     }
     //KillJobHandler
 
+    //ChangeModeHandler
+    if (request["SENDER"].get<std::string>() == "changemod" &&
+        request["RECEIVER"].get<std::string>() == "server" &&
+        request["REQUEST"].get<std::string>() == "change_mode")
+    {
+        if (debug > 0)
+        {
+            if (debug == 1)
+                *debug_file << "HandlerFactory getHandler(): Return ChangeModeHandler." << endl;
+            else if (debug == 2)
+                cout << "HandlerFactory getHandler(): Return ChangeModeHandler." << endl;
+        }
+        return new ChangeModeHandler(request, s);
+    }
+    //ChangeModeHandler
+
     //ERROR
     if (debug > 0)
     {

@@ -6,8 +6,7 @@ using namespace std;
 
 scheduler_service::scheduler_service(string mode, string ip, string port)
 {
-    if (mode != "")
-        set_mode(mode);
+    set_mode(mode);
     server_ip = ip;
     server_port = port;
 }
@@ -75,12 +74,19 @@ void scheduler_service::handlerequest(json request)
         //change schedule mode
         string mode = request["MODE"].get<std::string>();
         set_mode(mode);
+        cout << "change " << mode << endl;
     }
 }
 
 void scheduler_service::set_mode(string mode)
 {
     schedule_mode = mode;
+    if (mode == "")
+    {
+        scheduler = NULL;
+        return;
+    }
+
     //dlopen
     //scheduler = call creat object;
 }

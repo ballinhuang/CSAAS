@@ -43,6 +43,7 @@ public:
   json getjobinfo(int);
   json getrunjobinfo(int);
   json getall();
+  std::string sch_ip, sch_port;
 
 private:
   std::map<std::string, Node> nodelist;

@@ -11,5 +11,6 @@ componentbuild:
 	$(MAKE) -C subjob
 	$(MAKE) -C jobstatus
 	$(MAKE) -C killjob
+	$(MAKE) -C changemod
 clear:
 	$(MAKE) -C lib clean

@@ -95,4 +95,15 @@ private:
   json req_kill_job;
   s_socket *s;
 };
+
+class ChangeModeHandler : public IHandler
+{
+public:
+  ChangeModeHandler(json, s_socket *);
+  void handle();
+
+private:
+  json req_change_mode;
+  s_socket *s;
+};
 #endif

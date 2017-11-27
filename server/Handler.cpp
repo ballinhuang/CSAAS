@@ -313,3 +313,39 @@ void KillJobHandler::handle()
     }
 }
 //KillJobHandler end
+
+//ChangeModeHandler start
+ChangeModeHandler::ChangeModeHandler(json request, s_socket *socket)
+{
+    s = socket;
+    req_change_mode = request;
+}
+
+void ChangeModeHandler::handle()
+{
+    c_socket socket;
+    if (socket.setConnection(Monitor::GetInstance()->sch_ip, Monitor::GetInstance()->sch_port) == 0)
+    {
+        if (debug > 0)
+        {
+            if (debug == 1)
+                *debug_file << "Server ---> KillJobHandler handle(): setConnection() ERROR! " << endl;
+            else if (debug == 2)
+                cout << "Server ---> KillJobHandler handle(): setConnection() ERROR! " << endl;
+        }
+        s->sendmessage("Fail");
+        return;
+    }
+    if (socket.connect2server() == 0)
+    {
+        s->sendmessage("Fail");
+        return;
+    }
+    Message chang_mod_msg;
+    chang_mod_msg.msg = req_change_mode;
+    chang_mod_msg.encode_Header("server", "scheduler", "change_mode");
+    socket.send(chang_mod_msg.encode_Message());
+    socket.closeConnection();
+    s->sendmessage("Success");
+}
+//ChangeModeHandler end

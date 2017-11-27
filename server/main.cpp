@@ -119,6 +119,8 @@ int main(int argc, char **argv)
     server->set_server_attr(server_ip, server_port);
     server->set_scheduler_attr(scheduler_ip, scheduler_port);
     Monitor::GetInstance()->setnodelist();
+    Monitor::GetInstance()->sch_ip = scheduler_ip;
+    Monitor::GetInstance()->sch_port = scheduler_port;
     pid_t pid = fork();
     if (pid < 0)
     {
