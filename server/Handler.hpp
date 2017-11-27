@@ -85,6 +85,17 @@ private:
   s_socket *s;
 };
 
+class RunStateHandler : public IHandler
+{
+public:
+  RunStateHandler(json, s_socket *);
+  void handle();
+
+private:
+  json req_runqueue_state;
+  s_socket *s;
+};
+
 class KillJobHandler : public IHandler
 {
 public:
@@ -93,6 +104,50 @@ public:
 
 private:
   json req_kill_job;
+  s_socket *s;
+};
+
+class ChangeModeHandler : public IHandler
+{
+public:
+  ChangeModeHandler(json, s_socket *);
+  void handle();
+
+private:
+  json req_change_mode;
+  s_socket *s;
+};
+
+class GetTimeHandler : public IHandler
+{
+public:
+  GetTimeHandler(json, s_socket *);
+  void handle();
+
+private:
+  json req_get_time;
+  s_socket *s;
+};
+
+class AddNodeHandler : public IHandler
+{
+public:
+  AddNodeHandler(json, s_socket *);
+  void handle();
+
+private:
+  json req_add_node;
+  s_socket *s;
+};
+
+class RemoveNodeHandler : public IHandler
+{
+public:
+  RemoveNodeHandler(json, s_socket *);
+  void handle();
+
+private:
+  json req_remove_node;
   s_socket *s;
 };
 #endif

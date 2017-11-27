@@ -5,15 +5,16 @@
 #include "cc_socket.hpp"
 #include "Message.hpp"
 
-class FIFOScheHandler : public IScheHandler{
-    public:
-    FIFOScheHandler(cc_socket*);
+class FIFOScheHandler : public IScheHandler
+{
+  public:
+    FIFOScheHandler(cc_socket *);
     void handleschedule();
     bool handleUnsignNode(Message &, json &, json &, int);
     bool handleSingleNode(Message &, json &, json &, int);
     //bool handleMultiNode(Message &, json &, json &, int);
 
-    private:
+  private:
     cc_socket *socket;
 };
 

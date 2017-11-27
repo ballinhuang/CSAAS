@@ -11,5 +11,8 @@ componentbuild:
 	$(MAKE) -C subjob
 	$(MAKE) -C jobstatus
 	$(MAKE) -C killjob
+	$(MAKE) -C changemod
+	$(MAKE) -C addnode
+	$(MAKE) -C removenode
 clear:
 	$(MAKE) -C lib clean

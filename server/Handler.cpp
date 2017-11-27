@@ -81,7 +81,7 @@ void RunJobHandler::handle()
         }
 
         message.encode_Header("server", "mom", "runjob");
-        this_thread::sleep_for(std::chrono::seconds(1));
+        //this_thread::sleep_for(std::chrono::seconds(1));
 
         for (int j = 0; j < (int)(jobinfo["RUNNODE"].size()); j++)
         {
@@ -132,7 +132,8 @@ void RunJobHandler::handle()
         if (message.msg.count("MOTHERNODE") == 0)
         {
             // push_font to the joblist ??
-            Monitor::GetInstance()->setjobtofail(req_runjob["JOBID"][i].get<int>());
+            Monitor::GetInstance()->setjobtorunning(req_runjob["JOBID"][i].get<int>(), "None");
+            Monitor::GetInstance()->setjobtorunfail(req_runjob["JOBID"][i].get<int>());
             continue;
         }
 
@@ -171,6 +172,22 @@ void QueueStateHandler::handle()
 }
 
 //QueueStateHandler end
+
+//RunStateHandler start
+RunStateHandler::RunStateHandler(json request, s_socket *socket)
+{
+    s = socket;
+    req_runqueue_state = request;
+}
+
+void RunStateHandler::handle()
+{
+    Message runqueuestate;
+    runqueuestate.msg = Monitor::GetInstance()->getrunstat();
+    runqueuestate.encode_Header("server", "scheduler", "runqueuestate");
+    s->sendmessage(runqueuestate.encode_Message());
+}
+//RunStateHandler end
 
 //NodeStateHandler start
 
@@ -312,3 +329,86 @@ void KillJobHandler::handle()
     }
 }
 //KillJobHandler end
+
+//ChangeModeHandler start
+ChangeModeHandler::ChangeModeHandler(json request, s_socket *socket)
+{
+    s = socket;
+    req_change_mode = request;
+}
+
+void ChangeModeHandler::handle()
+{
+    c_socket socket;
+    if (socket.setConnection(Monitor::GetInstance()->sch_ip, Monitor::GetInstance()->sch_port) == 0)
+    {
+        if (debug > 0)
+        {
+            if (debug == 1)
+                *debug_file << "Server ---> KillJobHandler handle(): setConnection() ERROR! " << endl;
+            else if (debug == 2)
+                cout << "Server ---> KillJobHandler handle(): setConnection() ERROR! " << endl;
+        }
+        s->sendmessage("Fail");
+        return;
+    }
+    if (socket.connect2server() == 0)
+    {
+        s->sendmessage("Fail");
+        return;
+    }
+    Message chang_mod_msg;
+    chang_mod_msg.msg = req_change_mode;
+    chang_mod_msg.encode_Header("server", "scheduler", "change_mode");
+    socket.send(chang_mod_msg.encode_Message());
+    socket.closeConnection();
+    s->sendmessage("Success");
+}
+//ChangeModeHandler end
+
+//GetTimeHandler start
+GetTimeHandler::GetTimeHandler(json request, s_socket *socket)
+{
+    s = socket;
+    req_get_time = request;
+}
+void GetTimeHandler::handle()
+{
+    Message current_time_msg;
+    current_time_msg.msg["CURRENTTIME"] = Monitor::GetInstance()->getcurrenttime();
+    current_time_msg.encode_Header("server", "scheduler", "get_time");
+    s->sendmessage(current_time_msg.encode_Message());
+}
+//GetTimeHandler end
+
+//AddNodeHandler start
+AddNodeHandler::AddNodeHandler(json request, s_socket *socket)
+{
+    s = socket;
+    req_add_node = request;
+}
+void AddNodeHandler::handle()
+{
+    string ip, port, name;
+    int core;
+    ip = req_add_node["IP"].get<string>();
+    port = req_add_node["PORT"].get<string>();
+    name = req_add_node["NAME"].get<string>();
+    core = req_add_node["NP"].get<int>();
+    Monitor::GetInstance()->addnode(ip, port, name, core);
+}
+//AddNodeHandler end
+
+//RemoveNodeHandler start
+RemoveNodeHandler::RemoveNodeHandler(json request, s_socket *socket)
+{
+    s = socket;
+    req_remove_node = request;
+}
+void RemoveNodeHandler::handle()
+{
+    string name;
+    name = req_remove_node["NAME"].get<string>();
+    Monitor::GetInstance()->removenode(name);
+}
+//RemoveNodeHandler end

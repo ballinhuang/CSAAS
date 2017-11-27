@@ -53,6 +53,7 @@ int Monitor::addjob(json newjob)
     jobid = jobcount;
     newjob["JOBID"] = jobcount;
     newjob["JOBSTAT"] = "WAIT";
+    newjob["SUBMITTIME"] = getcurrenttime();
     joblist[jobcount] = newjob;
     jobcount++;
     jobtex.unlock();
@@ -110,6 +111,7 @@ void Monitor::setjobtorunning(int jobid, string mothor)
         return;
     }
     (iter->second)["JOBSTAT"] = "RUNNING";
+    (iter->second)["WAITTIME"] = getcurrenttime() - (iter->second)["SUBMITTIME"].get<long>();
     (iter->second)["MOTHERNODE"] = mothor;
     runninglist[jobid] = iter->second;
     readylist.erase(iter);
@@ -140,6 +142,7 @@ void Monitor::setjobtocomplete(int jobid)
         return;
     }
     (iter->second)["JOBSTAT"] = "COMPLETE";
+    (iter->second)["ENDTIME"] = getcurrenttime();
     completelist[jobid] = iter->second;
     runninglist.erase(iter);
 
@@ -235,6 +238,8 @@ json Monitor::getjobstat()
     for (map<int, json>::iterator it = joblist.begin(); it != joblist.end(); it++)
     {
         result["JOBID"][i] = (it->second)["JOBID"];
+        result["RUNTIME"][i] = (it->second)["RUNTIME"];
+        result["SUBMITTIME"][i] = (it->second)["SUBMITTIME"];
         if ((it->second).count("NODENEED") == 1)
         {
             result["NODENEED"][i] = (it->second)["NODENEED"];
@@ -256,7 +261,24 @@ json Monitor::getjobstat()
     jobtex.unlock();
     return result;
 }
-
+json Monitor::getrunstat()
+{
+    json result;
+    int i = 0;
+    runningtex.lock();
+    for (map<int, json>::iterator it = runninglist.begin(); it != runninglist.end(); it++)
+    {
+        result["JOBID"][i] = (it->second)["JOBID"];
+        result["RUNTIME"][i] = (it->second)["RUNTIME"];
+        result["WAITTIME"][i] = (it->second)["WAITTIME"];
+        result["SUBMITTIME"][i] = (it->second)["SUBMITTIME"];
+        result["RUNNODE"][i] = (it->second)["RUNNODE"];
+        result["RUNNP"][i] = (it->second)["RUNNP"];
+        i++;
+    }
+    runningtex.unlock();
+    return result;
+}
 json Monitor::getrunjobinfo(int jobid)
 {
     map<int, json>::iterator iter;
@@ -289,6 +311,48 @@ json Monitor::getjobinfo(int jobid)
     return result;
 }
 
+void Monitor::addnode(string ip, string port, string name, int core)
+{
+    Node node(ip, port, name, core);
+    nodetex.lock();
+    nodelist[name] = node;
+    nodetex.unlock();
+
+    c_socket cs;
+    if (cs.setConnection(ip, port) == 0)
+    {
+        return;
+    }
+    if (cs.connect2server() == 0)
+    {
+        return;
+    }
+    Message initmsg;
+    initmsg.initMessage();
+    Server *s;
+    s = dynamic_cast<Server *>(observer);
+    initmsg.msg["SERVERIP"] = s->getsvr_ip();
+    initmsg.msg["SERVERPORT"] = s->getsvr_port();
+    initmsg.encode_Header("server", "mom", "initmom");
+    cs.send(initmsg.encode_Message());
+    cs.closeConnection();
+}
+
+bool Monitor::removenode(string name)
+{
+    bool result = false;
+    nodetex.lock();
+    map<std::string, Node>::iterator iter;
+    iter = nodelist.find(name);
+    if (iter != nodelist.end())
+    {
+        nodelist.erase(iter);
+        result = true;
+    }
+    nodetex.unlock();
+    return result;
+}
+
 void Monitor::setnodelist()
 {
     ifstream nodes_fd;
@@ -299,6 +363,9 @@ void Monitor::setnodelist()
         int core;
         while (nodes_fd >> ip >> port >> name >> core)
         {
+            Node node(ip, port, name, core);
+            nodelist[name] = node;
+
             c_socket cs;
             if (cs.setConnection(ip, port) == 0)
             {
@@ -309,8 +376,6 @@ void Monitor::setnodelist()
                 continue;
             }
 
-            Node node(ip, port, name, core);
-            nodelist[name] = node;
             Message initmsg;
             initmsg.initMessage();
             Server *s;
@@ -402,4 +467,18 @@ json Monitor::getall()
     }
 
     return result;
+}
+
+long Monitor::getcurrenttime()
+{
+    long current_time;
+    time_t sys_time;
+    sys_time = time(NULL);
+    current_time = difftime(sys_time, start_time);
+    return current_time;
+}
+
+void Monitor::setstarttime()
+{
+    start_time = time(NULL);
 }

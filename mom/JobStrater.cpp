@@ -17,7 +17,7 @@
 
 #include "JobStrater.hpp"
 #include "JobQueue.hpp"
-#include "c_socket.hpp"
+#include "cc_socket.hpp"
 #include <json.hpp>
 #include "Message.hpp"
 
@@ -60,7 +60,7 @@ void JobStrater::start()
         //send fail job message
         Message failjob_msg;
         failjob_msg.initMessage();
-        c_socket socket;
+        cc_socket socket;
         int retry = 0;
         while (retry < 5)
         {
@@ -167,7 +167,7 @@ void JobStrater::start()
         //send fail job message
         Message failjob_msg;
         failjob_msg.initMessage();
-        c_socket socket;
+        cc_socket socket;
         int retry = 0;
         while (retry < 5)
         {
@@ -353,7 +353,7 @@ void JobStrater::start()
 
     //send down job message
     Message donejob_msg;
-    c_socket socket;
+    cc_socket socket;
     int retry = 0;
     while (retry < 5)
     {

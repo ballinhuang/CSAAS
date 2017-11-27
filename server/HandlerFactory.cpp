@@ -57,6 +57,22 @@ IHandler *HandlerFactory::getHandler(json request, s_socket *s)
     }
     //QueueStateHandler
 
+    //RunStateHandler
+    if (request["SENDER"].get<std::string>() == "scheduler" &&
+        request["RECEIVER"].get<std::string>() == "server" &&
+        request["REQUEST"].get<std::string>() == "runqueuestate")
+    {
+        if (debug > 0)
+        {
+            if (debug == 1)
+                *debug_file << "HandlerFactory getHandler(): Return RunStateHandler." << endl;
+            else if (debug == 2)
+                cout << "HandlerFactory getHandler(): Return RunStateHandler." << endl;
+        }
+        return new RunStateHandler(request, s);
+    }
+    //RunStateHandler
+
     //NodeStateHandler
     if (request["SENDER"].get<std::string>() == "scheduler" &&
         request["RECEIVER"].get<std::string>() == "server" &&
@@ -136,6 +152,70 @@ IHandler *HandlerFactory::getHandler(json request, s_socket *s)
         return new KillJobHandler(request, s);
     }
     //KillJobHandler
+
+    //ChangeModeHandler
+    if (request["SENDER"].get<std::string>() == "changemod" &&
+        request["RECEIVER"].get<std::string>() == "server" &&
+        request["REQUEST"].get<std::string>() == "change_mode")
+    {
+        if (debug > 0)
+        {
+            if (debug == 1)
+                *debug_file << "HandlerFactory getHandler(): Return ChangeModeHandler." << endl;
+            else if (debug == 2)
+                cout << "HandlerFactory getHandler(): Return ChangeModeHandler." << endl;
+        }
+        return new ChangeModeHandler(request, s);
+    }
+    //ChangeModeHandler
+
+    //GetTimeHandler
+    if (request["SENDER"].get<std::string>() == "scheduler" &&
+        request["RECEIVER"].get<std::string>() == "server" &&
+        request["REQUEST"].get<std::string>() == "get_time")
+    {
+        if (debug > 0)
+        {
+            if (debug == 1)
+                *debug_file << "HandlerFactory getHandler(): Return GetTimeHandler." << endl;
+            else if (debug == 2)
+                cout << "HandlerFactory getHandler(): Return GetTimeHandler." << endl;
+        }
+        return new GetTimeHandler(request, s);
+    }
+    //GetTimeHandler
+
+    //AddNodeHandler
+    if (request["SENDER"].get<std::string>() == "addnode" &&
+        request["RECEIVER"].get<std::string>() == "server" &&
+        request["REQUEST"].get<std::string>() == "addnode")
+    {
+        if (debug > 0)
+        {
+            if (debug == 1)
+                *debug_file << "HandlerFactory getHandler(): Return AddNodeHandler." << endl;
+            else if (debug == 2)
+                cout << "HandlerFactory getHandler(): Return AddNodeHandler." << endl;
+        }
+        return new AddNodeHandler(request, s);
+    }
+    //AddNodeHandler
+
+    //RemoveNodeHandler
+    if (request["SENDER"].get<std::string>() == "removenode" &&
+        request["RECEIVER"].get<std::string>() == "server" &&
+        request["REQUEST"].get<std::string>() == "removenode")
+    {
+        if (debug > 0)
+        {
+            if (debug == 1)
+                *debug_file << "HandlerFactory getHandler(): Return RemoveNodeHandler." << endl;
+            else if (debug == 2)
+                cout << "HandlerFactory getHandler(): Return RemoveNodeHandler." << endl;
+        }
+        return new RemoveNodeHandler(request, s);
+    }
+    //RemoveNodeHandler
 
     //ERROR
     if (debug > 0)

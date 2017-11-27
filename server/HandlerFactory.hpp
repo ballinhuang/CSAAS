@@ -5,9 +5,10 @@
 #include "IHandler.hpp"
 #include "s_socket.hpp"
 
-class HandlerFactory{
-    public:
-    static IHandler *getHandler(json,s_socket*);
+class HandlerFactory
+{
+  public:
+    static IHandler *getHandler(json, s_socket *);
 };
 
 #endif

@@ -3,14 +3,18 @@ CPPFLAGS := -Wall -O2
 INCLUDE := ../lib
 LIB := -pthread
 SRCS := $(shell ls *.cpp)
+MODEL := ../lib/Message.o ../lib/cc_socket.o
 OBJS:=$(subst .cpp,.o,$(SRCS))
 RM:=rm -f
 
-.PHONY: lib
+all:
+	$(MAKE) removenode
+	$(MAKE) clean
 
-all: lib
-
-lib: $(OBJS)
+removenode: $(OBJS) $(MODEL)
+	@echo "------ Linking ------" && \
+	$(CC) $(CPPFLAGS) $(LIB) -I ${INCLUDE} $^ -o $@ && \
+	echo  "------ Success ------" || echo "------ Fail! ------"
 
 %.o: %.cpp
 	@echo "------ Compile >> " $^ "to" $@ && \

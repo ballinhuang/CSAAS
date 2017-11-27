@@ -74,7 +74,9 @@ int s_socket::receivehendshack()
 
 void s_socket::sendmessage(string msg)
 {
-    sendhendshack(msg.size());
+    int rc = sendhendshack(msg.size());
+    if (rc == 0)
+        return;
     char *buf = (char *)malloc(sizeof(char) * (msg.size() + 1));
     memset(buf, 0, msg.size() + 1);
     strcpy(buf, msg.c_str());
@@ -83,11 +85,15 @@ void s_socket::sendmessage(string msg)
     free(buf);
 }
 
-void s_socket::sendhendshack(int size)
+int s_socket::sendhendshack(int size)
 {
     char num[10];
     sprintf(num, "%d", size);
-    write(conn_port, num, sizeof(num));
+    int rc;
+    rc = write(conn_port, num, sizeof(num));
+    if (rc != sizeof(num))
+        return 0;
+    return 1;
 }
 
 void s_socket::closebind()
@@ -98,6 +104,11 @@ void s_socket::closebind()
 void s_socket::closeConnection()
 {
     close(conn_port);
+}
+
+void s_socket::setconn_port(int fd)
+{
+    conn_port = fd;
 }
 
 void s_socket::setacceptreuse()

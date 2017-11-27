@@ -1,13 +1,14 @@
 #ifndef _SCHEHANDLERFACTORY
 #define _SCHEHANDLERFACTORY
-
-#include "IScheHandler.hpp"
 #include <iostream>
+#include "IScheHandler.hpp"
 #include "cc_socket.hpp"
+#include "IScheduler.hpp"
 
-class ScheHandlerFactory{
-    public:
-    static IScheHandler *getScheHandler(std::string, cc_socket*);
+class ScheHandlerFactory
+{
+  public:
+    static IScheHandler *getScheHandler(IScheduler *, cc_socket *);
 };
 
 #endif
