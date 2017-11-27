@@ -349,3 +349,18 @@ void ChangeModeHandler::handle()
     s->sendmessage("Success");
 }
 //ChangeModeHandler end
+
+//GetTimeHandler start
+GetTimeHandler::GetTimeHandler(json request, s_socket *socket)
+{
+    s = socket;
+    req_get_time = request;
+}
+void GetTimeHandler::handle()
+{
+    Message current_time_msg;
+    current_time_msg.msg["CURRENTTIME"] = Monitor::GetInstance()->getcurrenttime();
+    current_time_msg.encode_Header("server", "scheduler", "get_time");
+    s->sendmessage(current_time_msg.encode_Message());
+}
+//GetTimeHandler end

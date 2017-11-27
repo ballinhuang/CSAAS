@@ -53,6 +53,7 @@ int Monitor::addjob(json newjob)
     jobid = jobcount;
     newjob["JOBID"] = jobcount;
     newjob["JOBSTAT"] = "WAIT";
+    newjob["SUBMITTIME"] = getcurrenttime();
     joblist[jobcount] = newjob;
     jobcount++;
     jobtex.unlock();
@@ -110,6 +111,7 @@ void Monitor::setjobtorunning(int jobid, string mothor)
         return;
     }
     (iter->second)["JOBSTAT"] = "RUNNING";
+    (iter->second)["WAITTIME"] = getcurrenttime() - (iter->second)["SUBMITTIME"].get<long>();
     (iter->second)["MOTHERNODE"] = mothor;
     runninglist[jobid] = iter->second;
     readylist.erase(iter);
@@ -140,6 +142,7 @@ void Monitor::setjobtocomplete(int jobid)
         return;
     }
     (iter->second)["JOBSTAT"] = "COMPLETE";
+    (iter->second)["ENDTIME"] = getcurrenttime();
     completelist[jobid] = iter->second;
     runninglist.erase(iter);
 
@@ -402,4 +405,18 @@ json Monitor::getall()
     }
 
     return result;
+}
+
+long Monitor::getcurrenttime()
+{
+    long current_time;
+    time_t sys_time;
+    sys_time = time(NULL);
+    current_time = difftime(sys_time, start_time);
+    return current_time;
+}
+
+void Monitor::setstarttime()
+{
+    start_time = time(NULL);
 }

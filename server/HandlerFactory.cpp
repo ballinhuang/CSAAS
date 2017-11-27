@@ -153,6 +153,22 @@ IHandler *HandlerFactory::getHandler(json request, s_socket *s)
     }
     //ChangeModeHandler
 
+    //GetTimeHandler
+    if (request["SENDER"].get<std::string>() == "scheduler" &&
+        request["RECEIVER"].get<std::string>() == "server" &&
+        request["REQUEST"].get<std::string>() == "get_time")
+    {
+        if (debug > 0)
+        {
+            if (debug == 1)
+                *debug_file << "HandlerFactory getHandler(): Return GetTimeHandler." << endl;
+            else if (debug == 2)
+                cout << "HandlerFactory getHandler(): Return GetTimeHandler." << endl;
+        }
+        return new GetTimeHandler(request, s);
+    }
+    //GetTimeHandler
+
     //ERROR
     if (debug > 0)
     {

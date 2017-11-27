@@ -121,6 +121,7 @@ int main(int argc, char **argv)
     Monitor::GetInstance()->setnodelist();
     Monitor::GetInstance()->sch_ip = scheduler_ip;
     Monitor::GetInstance()->sch_port = scheduler_port;
+    Monitor::GetInstance()->setstarttime();
     pid_t pid = fork();
     if (pid < 0)
     {

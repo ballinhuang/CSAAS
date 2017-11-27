@@ -106,4 +106,15 @@ private:
   json req_change_mode;
   s_socket *s;
 };
+
+class GetTimeHandler : public IHandler
+{
+public:
+  GetTimeHandler(json, s_socket *);
+  void handle();
+
+private:
+  json req_get_time;
+  s_socket *s;
+};
 #endif

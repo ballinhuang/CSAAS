@@ -111,6 +111,17 @@ void subjob_service::parse_script(Message *j, string script_name)
         {
             j->msg["MPI"] = true;
         }
+        else if (set.compare("#RUNTIME") == 0)
+        {
+            int runtime;
+            ss >> runtime;
+            if (runtime <= 0)
+            {
+                cout << "Runtime neet to bigger then 1 second." << endl;
+                exit(1);
+            }
+            j->msg["RUNTIME"] = runtime;
+        }
         else
         {
             j->msg["SCRIPT"][count] = line;
@@ -129,6 +140,10 @@ void subjob_service::parse_script(Message *j, string script_name)
             cout << "Error! MPI support only can have one command." << endl;
             exit(1);
         }
+    }
+    if (j->msg.count("RUNTIME") == 0)
+    {
+        j->msg["RUNTIME"] = 1;
     }
     j->msg["JOBNAME"] = script_name + "@" + j->msg["ENV"]["USER"].get<string>();
 }

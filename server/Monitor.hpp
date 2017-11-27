@@ -4,6 +4,7 @@
 #include <mutex>
 #include <vector>
 #include <map>
+#include <ctime>
 #include <json.hpp>
 #include "Node.hpp"
 #include "Observer.hpp"
@@ -44,8 +45,11 @@ public:
   json getrunjobinfo(int);
   json getall();
   std::string sch_ip, sch_port;
+  long getcurrenttime();
+  void setstarttime();
 
 private:
+  time_t start_time;
   std::map<std::string, Node> nodelist;
   std::map<int, json> joblist;
   std::map<int, json> readylist;
