@@ -128,4 +128,26 @@ private:
   json req_get_time;
   s_socket *s;
 };
+
+class AddNodeHandler : public IHandler
+{
+public:
+  AddNodeHandler(json, s_socket *);
+  void handle();
+
+private:
+  json req_add_node;
+  s_socket *s;
+};
+
+class RemoveNodeHandler : public IHandler
+{
+public:
+  RemoveNodeHandler(json, s_socket *);
+  void handle();
+
+private:
+  json req_remove_node;
+  s_socket *s;
+};
 #endif

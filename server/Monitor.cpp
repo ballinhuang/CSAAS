@@ -311,6 +311,48 @@ json Monitor::getjobinfo(int jobid)
     return result;
 }
 
+void Monitor::addnode(string ip, string port, string name, int core)
+{
+    Node node(ip, port, name, core);
+    nodetex.lock();
+    nodelist[name] = node;
+    nodetex.unlock();
+
+    c_socket cs;
+    if (cs.setConnection(ip, port) == 0)
+    {
+        return;
+    }
+    if (cs.connect2server() == 0)
+    {
+        return;
+    }
+    Message initmsg;
+    initmsg.initMessage();
+    Server *s;
+    s = dynamic_cast<Server *>(observer);
+    initmsg.msg["SERVERIP"] = s->getsvr_ip();
+    initmsg.msg["SERVERPORT"] = s->getsvr_port();
+    initmsg.encode_Header("server", "mom", "initmom");
+    cs.send(initmsg.encode_Message());
+    cs.closeConnection();
+}
+
+bool Monitor::removenode(string name)
+{
+    bool result = false;
+    nodetex.lock();
+    map<std::string, Node>::iterator iter;
+    iter = nodelist.find(name);
+    if (iter != nodelist.end())
+    {
+        nodelist.erase(iter);
+        result = true;
+    }
+    nodetex.unlock();
+    return result;
+}
+
 void Monitor::setnodelist()
 {
     ifstream nodes_fd;
@@ -321,6 +363,9 @@ void Monitor::setnodelist()
         int core;
         while (nodes_fd >> ip >> port >> name >> core)
         {
+            Node node(ip, port, name, core);
+            nodelist[name] = node;
+
             c_socket cs;
             if (cs.setConnection(ip, port) == 0)
             {
@@ -331,8 +376,6 @@ void Monitor::setnodelist()
                 continue;
             }
 
-            Node node(ip, port, name, core);
-            nodelist[name] = node;
             Message initmsg;
             initmsg.initMessage();
             Server *s;

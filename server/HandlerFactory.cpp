@@ -185,6 +185,38 @@ IHandler *HandlerFactory::getHandler(json request, s_socket *s)
     }
     //GetTimeHandler
 
+    //AddNodeHandler
+    if (request["SENDER"].get<std::string>() == "addnode" &&
+        request["RECEIVER"].get<std::string>() == "server" &&
+        request["REQUEST"].get<std::string>() == "addnode")
+    {
+        if (debug > 0)
+        {
+            if (debug == 1)
+                *debug_file << "HandlerFactory getHandler(): Return AddNodeHandler." << endl;
+            else if (debug == 2)
+                cout << "HandlerFactory getHandler(): Return AddNodeHandler." << endl;
+        }
+        return new AddNodeHandler(request, s);
+    }
+    //AddNodeHandler
+
+    //RemoveNodeHandler
+    if (request["SENDER"].get<std::string>() == "removenode" &&
+        request["RECEIVER"].get<std::string>() == "server" &&
+        request["REQUEST"].get<std::string>() == "removenode")
+    {
+        if (debug > 0)
+        {
+            if (debug == 1)
+                *debug_file << "HandlerFactory getHandler(): Return RemoveNodeHandler." << endl;
+            else if (debug == 2)
+                cout << "HandlerFactory getHandler(): Return RemoveNodeHandler." << endl;
+        }
+        return new RemoveNodeHandler(request, s);
+    }
+    //RemoveNodeHandler
+
     //ERROR
     if (debug > 0)
     {

@@ -45,7 +45,8 @@ public:
   json getjobinfo(int);
   json getrunjobinfo(int);
   json getall();
-
+  void addnode(std::string, std::string, std::string, int);
+  bool removenode(std::string);
   std::string sch_ip, sch_port;
   long getcurrenttime();
   void setstarttime();

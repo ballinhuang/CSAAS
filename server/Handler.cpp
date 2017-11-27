@@ -380,3 +380,35 @@ void GetTimeHandler::handle()
     s->sendmessage(current_time_msg.encode_Message());
 }
 //GetTimeHandler end
+
+//AddNodeHandler start
+AddNodeHandler::AddNodeHandler(json request, s_socket *socket)
+{
+    s = socket;
+    req_add_node = request;
+}
+void AddNodeHandler::handle()
+{
+    string ip, port, name;
+    int core;
+    ip = req_add_node["IP"].get<string>();
+    port = req_add_node["PORT"].get<string>();
+    name = req_add_node["NAME"].get<string>();
+    core = req_add_node["NP"].get<int>();
+    Monitor::GetInstance()->addnode(ip, port, name, core);
+}
+//AddNodeHandler end
+
+//RemoveNodeHandler start
+RemoveNodeHandler::RemoveNodeHandler(json request, s_socket *socket)
+{
+    s = socket;
+    req_remove_node = request;
+}
+void RemoveNodeHandler::handle()
+{
+    string name;
+    name = req_remove_node["NAME"].get<string>();
+    Monitor::GetInstance()->removenode(name);
+}
+//RemoveNodeHandler end
