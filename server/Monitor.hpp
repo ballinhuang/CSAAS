@@ -33,6 +33,7 @@ public:
   void notitfyschedualfinish();
   void notitfynewjob();
   json getjobstat();
+  json getrunstat();
   void setnodelist();
   json getnodelist();
   void setjobtoready(int, std::string, int);
@@ -44,6 +45,7 @@ public:
   json getjobinfo(int);
   json getrunjobinfo(int);
   json getall();
+
   std::string sch_ip, sch_port;
   long getcurrenttime();
   void setstarttime();

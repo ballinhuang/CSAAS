@@ -85,6 +85,17 @@ private:
   s_socket *s;
 };
 
+class RunStateHandler : public IHandler
+{
+public:
+  RunStateHandler(json, s_socket *);
+  void handle();
+
+private:
+  json req_runqueue_state;
+  s_socket *s;
+};
+
 class KillJobHandler : public IHandler
 {
 public:

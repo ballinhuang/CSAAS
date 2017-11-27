@@ -173,6 +173,22 @@ void QueueStateHandler::handle()
 
 //QueueStateHandler end
 
+//RunStateHandler start
+RunStateHandler::RunStateHandler(json request, s_socket *socket)
+{
+    s = socket;
+    req_runqueue_state = request;
+}
+
+void RunStateHandler::handle()
+{
+    Message runqueuestate;
+    runqueuestate.msg = Monitor::GetInstance()->getrunstat();
+    runqueuestate.encode_Header("server", "scheduler", "runqueuestate");
+    s->sendmessage(runqueuestate.encode_Message());
+}
+//RunStateHandler end
+
 //NodeStateHandler start
 
 NodeStateHandler::NodeStateHandler(json request, s_socket *socket)

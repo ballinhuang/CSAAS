@@ -27,7 +27,7 @@ void FIFOScheHandler::handleschedule()
     }
     string str_nodestate = "", str_queuestate = "";
     json nodestate, queuestate;
-    Message req_nodestate, req_queuestate, req_current_time;
+    Message req_nodestate, req_queuestate;
 
     req_nodestate.encode_Header("scheduler", "server", "nodestate");
     socket->send(req_nodestate.encode_Message());
@@ -46,6 +46,8 @@ void FIFOScheHandler::handleschedule()
         }
     }
 
+    //test get_time
+    Message req_current_time;
     req_current_time.encode_Header("scheduler", "server", "get_time");
     socket->send(req_current_time.encode_Message());
     string str_current_time = socket->receive();
@@ -58,6 +60,21 @@ void FIFOScheHandler::handleschedule()
         else if (debug == 2)
             cout << "Scheduler ---> FIFOScheHandler handleschedule(): Require current_time = " << endl
                  << json_current.dump() << endl;
+    }
+    //test runqueuestate
+    Message req_runqueuestate;
+    req_runqueuestate.encode_Header("scheduler", "server", "runqueuestate");
+    socket->send(req_runqueuestate.encode_Message());
+    string str_runqueuestate = socket->receive();
+    json json_runqueuestate = json::parse(str_runqueuestate);
+    if (debug > 0)
+    {
+        if (debug == 1)
+            *debug_file << "Scheduler ---> FIFOScheHandler handleschedule(): Require runqueuestate = " << endl
+                        << json_runqueuestate.dump() << endl;
+        else if (debug == 2)
+            cout << "Scheduler ---> FIFOScheHandler handleschedule(): Require runqueuestate = " << endl
+                 << json_runqueuestate.dump() << endl;
     }
 
     req_queuestate.encode_Header("scheduler", "server", "queuestate");

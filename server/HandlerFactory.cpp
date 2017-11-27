@@ -57,6 +57,22 @@ IHandler *HandlerFactory::getHandler(json request, s_socket *s)
     }
     //QueueStateHandler
 
+    //RunStateHandler
+    if (request["SENDER"].get<std::string>() == "scheduler" &&
+        request["RECEIVER"].get<std::string>() == "server" &&
+        request["REQUEST"].get<std::string>() == "runqueuestate")
+    {
+        if (debug > 0)
+        {
+            if (debug == 1)
+                *debug_file << "HandlerFactory getHandler(): Return RunStateHandler." << endl;
+            else if (debug == 2)
+                cout << "HandlerFactory getHandler(): Return RunStateHandler." << endl;
+        }
+        return new RunStateHandler(request, s);
+    }
+    //RunStateHandler
+
     //NodeStateHandler
     if (request["SENDER"].get<std::string>() == "scheduler" &&
         request["RECEIVER"].get<std::string>() == "server" &&

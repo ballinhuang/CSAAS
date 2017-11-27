@@ -238,6 +238,8 @@ json Monitor::getjobstat()
     for (map<int, json>::iterator it = joblist.begin(); it != joblist.end(); it++)
     {
         result["JOBID"][i] = (it->second)["JOBID"];
+        result["RUNTIME"][i] = (it->second)["RUNTIME"];
+        result["SUBMITTIME"][i] = (it->second)["SUBMITTIME"];
         if ((it->second).count("NODENEED") == 1)
         {
             result["NODENEED"][i] = (it->second)["NODENEED"];
@@ -259,7 +261,24 @@ json Monitor::getjobstat()
     jobtex.unlock();
     return result;
 }
-
+json Monitor::getrunstat()
+{
+    json result;
+    int i = 0;
+    runningtex.lock();
+    for (map<int, json>::iterator it = runninglist.begin(); it != runninglist.end(); it++)
+    {
+        result["JOBID"][i] = (it->second)["JOBID"];
+        result["RUNTIME"][i] = (it->second)["RUNTIME"];
+        result["WAITTIME"][i] = (it->second)["WAITTIME"];
+        result["SUBMITTIME"][i] = (it->second)["SUBMITTIME"];
+        result["RUNNODE"][i] = (it->second)["RUNNODE"];
+        result["RUNNP"][i] = (it->second)["RUNNP"];
+        i++;
+    }
+    runningtex.unlock();
+    return result;
+}
 json Monitor::getrunjobinfo(int jobid)
 {
     map<int, json>::iterator iter;
