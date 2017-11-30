@@ -1,11 +1,12 @@
 #include "scheduler_service.hpp"
 #include "cc_socket.hpp"
-
 #include <vector>
-using namespace std;
+#include <dlfcn.h>
 
 scheduler_service::scheduler_service(string mode, string ip, string port)
 {
+    if(debug == 2)
+        cout << "Before set mode." << endl;
     set_mode(mode);
     server_ip = ip;
     server_port = port;
@@ -25,6 +26,8 @@ void scheduler_service::do_schedule(string server_ip, string server_port)
     IScheHandler *ScheHandler = factory->getScheHandler(scheduler, socket);
     if (ScheHandler == NULL)
         return;
+    if(debug == 2)
+        cout << "Before handleschedule." << endl;
     ScheHandler->handleschedule();
     socket->closeConnection();
 }
@@ -65,6 +68,8 @@ void scheduler_service::handlerequest(json request)
         {
             return;
         }
+        if(debug == 2)
+            cout << "Before do_schedule." << endl;
         do_schedule(server_ip, server_port);
     }
     else if (request["SENDER"].get<std::string>() == "server" &&
@@ -87,6 +92,18 @@ void scheduler_service::set_mode(string mode)
         return;
     }
 
-    //dlopen
-    //scheduler = call creat object;
+    IScheduler* (*getInstance)();
+
+    handle = dlopen(mode.c_str(), RTLD_LAZY);
+    if(!handle) {
+        cout << "dlopen handle error!" << endl;
+        exit(1);
+    }
+
+    getInstance = (IScheduler* (*)())dlsym(handle, "getInstance");
+    if(dlerror() != NULL) {
+        cout << "getInstance function loaded error!" << endl;
+        exit(1);
+    }
+    scheduler = getInstance();
 }

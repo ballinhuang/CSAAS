@@ -6,7 +6,6 @@
 #include "scheduler_service.hpp"
 
 using namespace std;
-// for convenience
 using json = nlohmann::json;
 
 int debug = 0;
@@ -35,8 +34,7 @@ int main(int argc, char **argv)
             else if (arg == "-mode")
             {
                 i++;
-                arg = std::string(argv[i]);
-                schedule_mode = arg;
+                schedule_mode = std::string(argv[i]);
             }
             else if (arg == "-i")
             {
@@ -64,7 +62,7 @@ int main(int argc, char **argv)
     */
     if ((scheduler_ip == "" && scheduler_port != "") || (scheduler_ip != "" && scheduler_port == ""))
     {
-        cout << "Scheduler ---> main(): Error! -i -p must be used at the same time." << endl;
+        cout << "Scheduler ---> main(): Error! -i -p must be filled with parameter." << endl;
         exit(1);
     }
 
@@ -90,6 +88,8 @@ int main(int argc, char **argv)
     }
     socket->closebind();
 
+    if(debug == 2)
+        cout << "Before scheduler_service." << endl;
     scheduler_service *service = new scheduler_service(schedule_mode, scheduler_ip, scheduler_port);
 
     pid_t pid = fork();
@@ -104,6 +104,8 @@ int main(int argc, char **argv)
         return 0;
     }
 
+    if(debug == 2)
+        cout << "Before startservice." << endl;
     service->startservice();
 
     /*

@@ -13,7 +13,7 @@ all:
 
 scheduler: $(OBJS) $(MODEL)
 	@echo "------ Linking ------" && \
-	$(CC) $(CPPFLAGS) $(LIB) -I ${INCLUDE} $^ -o $@ && \
+	$(CC) $(CPPFLAGS) $(LIB) -I ${INCLUDE} $^ -ldl -o $@ && \
 	echo  "------ Success ------" || echo "------ Fail! ------"
 
 %.o: %.cpp

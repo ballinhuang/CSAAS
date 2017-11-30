@@ -9,8 +9,10 @@
 #include "IScheHandler.hpp"
 
 #include <iostream>
-
+using namespace std;
 using json = nlohmann::json;
+
+extern int debug;
 
 class scheduler_service
 {
@@ -24,7 +26,8 @@ private:
   void handlerequest(json);
   std::string schedule_mode, server_ip, server_port;
   ScheHandlerFactory *factory;
-  IScheduler *scheduler = NULL;
+  IScheduler *scheduler;
+  void *handle;
 };
 
 #endif
