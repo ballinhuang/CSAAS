@@ -454,7 +454,7 @@ json Monitor::getall()
         result["JOBSTAT"][index] = (mi->second)["JOBSTAT"];
         result["USER"][index] = (mi->second)["ENV"]["USER"];
         result["JOBNAME"][index] = (mi->second)["JOBNAME"];
-        if ((mi->second)["JOBSTAT"].get<string>() == "RUNNING" || (mi->second)["JOBSTAT"].get<string>() == "READY" || (mi->second)["JOBSTAT"].get<string>() == "COMPLETE")
+        if ((mi->second)["JOBSTAT"].get<string>() == "RUNFAIL" || (mi->second)["JOBSTAT"].get<string>() == "RUNNING" || (mi->second)["JOBSTAT"].get<string>() == "READY" || (mi->second)["JOBSTAT"].get<string>() == "COMPLETE")
         {
             for (int i = 0; i < (int)(mi->second)["RUNNODE"].size(); i++)
             {
@@ -462,7 +462,7 @@ json Monitor::getall()
                 result["RUNNP"][index].push_back((mi->second)["RUNNP"][i]);
             }
 
-            if ((mi->second)["JOBSTAT"].get<string>() == "RUNNING" || (mi->second)["JOBSTAT"].get<string>() == "COMPLETE")
+            if ((mi->second)["JOBSTAT"].get<string>() == "RUNFAIL" || (mi->second)["JOBSTAT"].get<string>() == "RUNNING" || (mi->second)["JOBSTAT"].get<string>() == "COMPLETE")
                 result["MOTHERNODE"][index] = (mi->second)["MOTHERNODE"];
         }
         if (debug == 2)
