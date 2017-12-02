@@ -23,8 +23,10 @@ deque<Job> SJF::schedule(deque<Job> waitQ, deque<Job> runQ, long currentTime, de
 bool SJF::cmpRuntime(Job a, Job b) {
     if(a.getRun() != b.getRun())
         return a.getRun() < b.getRun();
+    else if(a.getSubmit() != b.getSubmit())
+        return a.getSubmit() < b.getSubmit();
 
-    return a.getSubmit() < b.getSubmit();
+    return a.getId() < b.getId();
 }
 
 void SJF::setNp(deque<Node> &node) {

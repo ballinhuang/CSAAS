@@ -50,6 +50,7 @@ public:
   std::string sch_ip, sch_port;
   long getcurrenttime();
   void setstarttime();
+  void storeLog(json);
 
 private:
   time_t start_time;
