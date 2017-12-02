@@ -211,7 +211,7 @@ void Monitor::setjobtorunfail(int jobid)
         return;
     }
     (iter->second)["JOBSTAT"] = "RUNFAIL";
-    storeLog(iter->second);
+    //storeLog(iter->second);
     faillist[jobid] = iter->second;
     runninglist.erase(iter);
 
@@ -489,21 +489,22 @@ void Monitor::setstarttime()
     start_time = time(NULL);
 }
 
-void Monitor::storeLog(json job) {
+void Monitor::storeLog(json job)
+{
     long long int id = job["JOBID"].get<long long int>();
     long long int submit = job["SUBMITTIME"].get<long long int>();
     long long int wait = job["WAITTIME"].get<long long int>();
     long long int run = job["ENDTIME"].get<long long int>() - submit - wait;
     int np = job["NPNEED"].get<int>();
-    long long int userRun = job["RUNTIME"].get<long long int>();    
+    long long int userRun = job["RUNTIME"].get<long long int>();
     string status = job["JOBSTAT"].get<string>();
 
     logFile << setw(8) << id << setw(8) << submit << setw(8) << wait << setw(8) << run;
     logFile << setw(5) << np << setw(3) << -1 << setw(3) << -1 << setw(5) << np;
     logFile << setw(8) << userRun << setw(3) << -1;
-    if(status == "COMPLETE")
+    if (status == "COMPLETE")
         logFile << setw(3) << 1;
-    else if(status == "FAIL")
+    else if (status == "FAIL")
         logFile << setw(3) << 0;
     else
         logFile << setw(3) << 5;
