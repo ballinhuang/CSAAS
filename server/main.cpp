@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -6,12 +7,30 @@
 #include "Server.hpp"
 #include "Monitor.hpp"
 #include <mutex>
+#include <ctime>
 using namespace std;
 
 mutex monitor_mtx;
 Monitor *Monitor::monitor = 0;
 int debug = 0;
 ofstream *debug_file;
+fstream logFile;
+
+void setLogName() {
+    time_t t = time(0);
+    char timer[99];
+    string logName = "CrownLog";
+
+    strftime(timer, sizeof(timer), "%Y%m%d%H%M%S", localtime(&t));
+    logName += string(timer) + ".log";
+    
+    logFile.open(logName.c_str(), ios::out);
+    if(!logFile.is_open()) {
+        cout << "Generation of log file is error!" << endl;
+        exit(1);
+    }
+}
+
 int main(int argc, char **argv)
 {
 
@@ -114,6 +133,7 @@ int main(int argc, char **argv)
     s.closebind();
     //creat Server and Monitor , attach Server to Monitor.
 
+    setLogName();
     Server *server = new Server();
     Monitor::GetInstance()->attachserver(server);
     server->set_server_attr(server_ip, server_port);

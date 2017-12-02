@@ -14,7 +14,7 @@ using json = nlohmann::json;
 
 int main(int argc, char **argv) {
     string ip = "", port = "", displayType = "", userName = "";
-    bool detailMode = false, root = false;
+    bool detailMode = false, root = false, webGetJson = false;
     int checkFlag = 0, jobID = -1;
 
     if(argc > 1) {
@@ -41,7 +41,9 @@ int main(int argc, char **argv) {
                     if(displayType[i] >= 'a' && displayType[i] <= 'z')
                         displayType[i] = displayType[i] - 'a' + 'A';
 
-                if(displayType != "DEBUG" && displayType != "COMPLETE" && displayType != "RUNNING" && displayType != "WAIT" && displayType != "FAIL" && displayType != "RUNFAIL") {
+                if(displayType == "JSON")
+                    webGetJson = true;
+                else if(displayType != "DEBUG" && displayType != "COMPLETE" && displayType != "RUNNING" && displayType != "WAIT" && displayType != "FAIL" && displayType != "RUNFAIL") {
                     cout << "JobState ---> main(): Error status assign !" << endl;
                     exit(1);
                 }
@@ -106,6 +108,11 @@ int main(int argc, char **argv) {
     csock.send(req_state.encode_Message());
     list = csock.receive();
     csock.closeConnection();
+
+    if(webGetJson) {
+        cout << list << endl;
+        return 0;
+    }
 
     DisplayInterface *display;
     if(detailMode)

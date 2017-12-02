@@ -143,9 +143,14 @@ void subjob_service::parse_script(Message *j, string script_name)
     }
     if (j->msg.count("RUNTIME") == 0)
     {
-        j->msg["RUNTIME"] = 1;
+        j->msg["RUNTIME"] = -1;
     }
-    j->msg["JOBNAME"] = script_name + "@" + j->msg["ENV"]["USER"].get<string>();
+    int index = 0;
+
+    for(int index = script_name.length() - 1; index >= 0; index--)
+        if(script_name[index] == '/')
+            break;
+    j->msg["JOBNAME"] = script_name.substr(index + 1) + "@" + j->msg["ENV"]["USER"].get<string>();
 }
 
 void subjob_service::creatjob(Message *j, string script_name, string username)
