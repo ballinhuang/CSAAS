@@ -131,12 +131,10 @@ void FIFOScheHandler::handleschedule()
                 if (handleSingleNode(req_runjob, queuestate, nodestate, queue_index))
                     break;
             }
-            /*
             else if(queuestate["NODENEED"][queue_index].get<int>() > 1) {
                 if(handleMultiNode(req_runjob ,queuestate, nodestate, queue_index))
                     break;
             }
-            */
             else
             {
                 if (debug == 1)
@@ -303,7 +301,7 @@ bool FIFOScheHandler::handleSingleNode(Message &req, json &queue, json &node, in
     else
         return false;
 }
-/*
+
 bool FIFOScheHandler::handleMultiNode(Message &req, json &queue, json &node, int queue_index) {
     if(debug == 1)
         *debug_file << "Scheduler ---> FIFOScheHandler handleMultiNode(): Start Scheduling." << endl;
@@ -376,4 +374,3 @@ bool FIFOScheHandler::handleMultiNode(Message &req, json &queue, json &node, int
 
     return false;
 }
-*/

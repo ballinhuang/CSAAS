@@ -183,6 +183,8 @@ void Monitor::setjobtofail(int jobid)
         return;
     }
     (iter->second)["JOBSTAT"] = "FAIL";
+    (iter->second)["WAITTIME"] = getcurrenttime() - (iter->second)["SUBMITTIME"].get<long>();
+    (iter->second)["ENDTIME"] = getcurrenttime();
     storeLog(iter->second);
     faillist[jobid] = iter->second;
     joblist.erase(iter);
@@ -211,6 +213,7 @@ void Monitor::setjobtorunfail(int jobid)
         return;
     }
     (iter->second)["JOBSTAT"] = "RUNFAIL";
+    (iter->second)["ENDTIME"] = getcurrenttime();
     //storeLog(iter->second);
     faillist[jobid] = iter->second;
     runninglist.erase(iter);
@@ -495,9 +498,14 @@ void Monitor::storeLog(json job)
     long long int submit = job["SUBMITTIME"].get<long long int>();
     long long int wait = job["WAITTIME"].get<long long int>();
     long long int run = job["ENDTIME"].get<long long int>() - submit - wait;
-    int np = job["NPNEED"].get<int>();
+    int np = 0;
     long long int userRun = job["RUNTIME"].get<long long int>();
     string status = job["JOBSTAT"].get<string>();
+
+    if(job["NODENEED"].get<int>() > 1)
+        np = job["NPNEED"].get<int>() * job["NODENEED"].get<int>();
+    else
+        np = job["NPNEED"].get<int>();
 
     logFile << setw(8) << id << setw(8) << submit << setw(8) << wait << setw(8) << run;
     logFile << setw(5) << np << setw(3) << -1 << setw(3) << -1 << setw(5) << np;
