@@ -147,7 +147,7 @@ void subjob_service::parse_script(Message *j, string script_name)
     }
     int index = 0;
 
-    for(int index = script_name.length() - 1; index >= 0; index--)
+    for(index = script_name.length() - 1; index >= 0; index--)
         if(script_name[index] == '/')
             break;
     j->msg["JOBNAME"] = script_name.substr(index + 1) + "@" + j->msg["ENV"]["USER"].get<string>();
