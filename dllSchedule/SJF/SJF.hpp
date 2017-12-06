@@ -10,14 +10,16 @@ class SJF : public IScheduler {
 
     private:
         static bool cmpRuntime(Job, Job);
-        void setNp(deque<Node> &);
-        void doSchedule(deque<Job> &, deque<Job> &, deque<Job> &);
-        void assignNode(deque<Job> &, deque<Node> &);
-        void addFailJob(deque<Job> &);
+        void setNp();
+        bool assignedNodeSchedule(Job, deque<Job> &);
+        bool arbitraryNodeSchedule(Job, deque<Job> &);
 
         int allNp;
         int remainingNp;
-        deque<Job> result;
+        long currentTime;
+        deque<Job> waitQ;
+        deque<Job> runQ;
+        deque<Node> nodeQ;
 };
 
 #endif

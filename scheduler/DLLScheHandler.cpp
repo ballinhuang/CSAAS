@@ -20,12 +20,12 @@ void DLLScheHandler::handleschedule()
     setTimer();
 
     if(debug == 2)
-        cout << "Before SJF do schedule." << endl;
+        cout << "Before DLL do schedule." << endl;
     // get Jobs of ready to run
     deque<Job> doJob = scheduler->schedule(waitQ, runQ, timer, nodeQ);
 
     if(debug == 2)
-        cout << "Before SJF send result." << endl;
+        cout << "Before DLL send result." << endl;
     // encode Jobs to Message format and send to server
     sendResult(doJob);
 }
@@ -65,7 +65,7 @@ void DLLScheHandler::setWaitQ() {
     WaitJson.msg = getInfo("queuestate");
 
     for(int i = 0; i < (int)WaitJson.msg["JOBID"].size(); i++) {
-        Job j(WaitJson.msg["JOBID"][i].get<long>(), WaitJson.msg["SUBMITTIME"][i].get<long>(), WaitJson.msg["RUNTIME"][i].get<long>(), WaitJson.msg["NPNEED"][i].get<int>(), wait);
+        Job j(WaitJson.msg["JOBID"][i].get<long>(), WaitJson.msg["SUBMITTIME"][i].get<long>(), WaitJson.msg["RUNTIME"][i].get<long>(), WaitJson.msg["NPNEED"][i].get<int>(), WaitJson.msg["NODENEED"][i].get<int>(), wait);
         waitQ.push_back(j);
     }
 }

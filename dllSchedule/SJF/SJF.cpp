@@ -7,17 +7,27 @@ IScheduler* getInstance() {
 
 SJF::SJF() {}
 
-deque<Job> SJF::schedule(deque<Job> waitQ, deque<Job> runQ, long currentTime, deque<Node> nodeQ) {
+deque<Job> SJF::schedule(deque<Job> wait, deque<Job> run, long currentT, deque<Node> node) {
+    waitQ = wait;
+    runQ = run;
+    nodeQ = node;
+    currentTime = currentT;
     sort(waitQ.begin(), waitQ.end(), cmpRuntime);
-    setNp(nodeQ);
-    result.clear();
+    setNp();
 
-    deque<Job> doJob, failJob;
-    doSchedule(doJob, failJob, waitQ);
-    assignNode(doJob, nodeQ);
-    addFailJob(failJob);
+    deque<Job> resultQ;
 
-    return result;
+    for(deque<Job>::iterator di = waitQ.begin(); di != waitQ.end(); di++)
+        if(di->getRequiredNode() > 1) {
+            if(!assignedNodeSchedule(*di, resultQ))
+                break;
+        }
+        else {
+            if(!arbitraryNodeSchedule(*di, resultQ))
+                break;
+        }
+
+    return resultQ;
 }
 
 bool SJF::cmpRuntime(Job a, Job b) {
@@ -29,56 +39,75 @@ bool SJF::cmpRuntime(Job a, Job b) {
     return a.getId() < b.getId();
 }
 
-void SJF::setNp(deque<Node> &node) {
+void SJF::setNp() {
     allNp = 0;
     remainingNp = 0;
 
-    for(deque<Node>::iterator di = node.begin(); di != node.end(); di++) {
+    for(deque<Node>::iterator di = nodeQ.begin(); di != nodeQ.end(); di++) {
         allNp += di->getOnp();
         remainingNp += di->getNp();
     }
 }
 
-void SJF::doSchedule(deque<Job> &doJob, deque<Job> &failJob, deque<Job> &wait) {
-    for(deque<Job>::iterator di = wait.begin(); di != wait.end(); di++) {
-        if(di->getNp() <= remainingNp) {
-            doJob.push_back(*di);
-            remainingNp -= di->getNp();
+bool SJF::assignedNodeSchedule(Job j, deque<Job> &resultQ) {
+    deque<Job> tempQ;
+
+    for(deque<Node>::iterator di = nodeQ.begin(); di != nodeQ.end() && tempQ.size() < j.getRequiredNode(); di++)
+        if(di->getNp() >= j.getNp()) {
+            Job doJob(j.getId(), j.getNp(), di->getNodeName());
+            tempQ.push_back(doJob);
+            di->setNp(di->getNp() - j.getNp());
         }
-        else if(di->getNp() > allNp)
-            failJob.push_back(*di);
-        else
-            break;
+
+    if(tempQ.size() == j.getRequiredNode()) {
+        for(deque<Job>::iterator di = tempQ.begin(); di != tempQ.end(); di++)
+            resultQ.push_back(*di);
+
+        return true;
     }
+
+    int counter = 0;
+
+    for(deque<Node>::iterator di = nodeQ.begin(); di != nodeQ.end() && counter < j.getRequiredNode(); di++)
+        if(di->getOnp() >= j.getNp())
+            counter++;
+
+    if(counter < j.getRequiredNode()) {
+        Job doJob(j.getId(), -1, "FAIL");
+        resultQ.push_back(doJob);
+
+        return true;
+    }
+    
+    return false;
 }
 
-void SJF::assignNode(deque<Job> &doJob, deque<Node> &node) {
-    for(deque<Job>::iterator di = doJob.begin(); di != doJob.end(); di++) {
-        int tempNp = di->getNp();
+bool SJF::arbitraryNodeSchedule(Job j, deque<Job> &resultQ) {
+    int jobNp = j.getNp();
 
-        for(deque<Node>::iterator ni = node.begin(); ni != node.end() && tempNp > 0; ni++)
-            if(ni->getNp() == 0) {
-                node.erase(ni);
-                ni--;
-            }
-            else if(tempNp <= ni->getNp()) {
-                Job j(di->getId(), tempNp, ni->getNodeName());
-                result.push_back(j);
-                ni->setNp(ni->getNp() - tempNp);
-                tempNp = 0;
+    if(jobNp <= remainingNp) {
+        for(deque<Node>::iterator di = nodeQ.begin(); di != nodeQ.end() && jobNp > 0; di++)
+            if(di->getNp() == 0)
+                continue;
+            else if(jobNp > di->getNp()) {
+                Job doJob(j.getId(), di->getNp(), di->getNodeName());
+                resultQ.push_back(doJob);
+                jobNp -= di->getNp();
+                di->setNp(0);
             }
             else {
-                Job j(di->getId(), ni->getNp(), ni->getNodeName());
-                result.push_back(j);
-                tempNp -= ni->getNp();
-                ni->setNp(0);
+                Job doJob(j.getId(), jobNp, di->getNodeName());
+                resultQ.push_back(doJob);
+                di->setNp(di->getNp() - jobNp);
+                jobNp = 0;
             }
     }
-}
-
-void SJF::addFailJob(deque<Job> &failJob) {
-    for(deque<Job>::iterator di = failJob.begin(); di != failJob.end(); di++) {
-        Job j(di->getId(), -1, "FAIL");
-        result.push_back(j);
+    else if(jobNp > allNp) {
+        Job doJob(j.getId(), -1, "FAIL");
+        resultQ.push_back(doJob);
     }
+    else
+        return false;
+
+    return true;
 }
