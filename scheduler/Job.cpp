@@ -1,6 +1,6 @@
 #include "Job.hpp"
 
-Job::Job(long id, long submit, long run, int np, Type t) : id(id), submitTime(submit), runTime(run), np(np), type(t) {}
+Job::Job(long id, long submit, long run, int np, int reqNode, Type t) : id(id), submitTime(submit), runTime(run), np(np), requiredNode(reqNode), type(t) {}
 
 Job::Job(long id, long submit, long run, int np, string name, Type t) : id(id), submitTime(submit), runTime(run), np(np), nodeName(name), type(t) {}
 
@@ -37,6 +37,10 @@ long Job::getEnd() {
 
 int Job::getNp() {
     return this->np;
+}
+
+int Job::getRequiredNode() {
+    return this->requiredNode;
 }
 
 string Job::getNodeName() {
