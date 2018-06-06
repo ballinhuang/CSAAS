@@ -24,15 +24,6 @@ $ vim node.con
 
 ```
 
-### subjob
-```
-$ vim subjob.con
-<server's ip> <server's port>
-```
-or
-```
-$./subjob -i <server's ip> -p <server's port> <filename>
-```
 
 # 開始使用
 
@@ -56,7 +47,10 @@ $ ./mom -i [momip] -p [momport] (-odebug)
 ```
 ### subjob (提交工作)
 ```
-$ cd subjob
-$ ./subjob -i [serverip] -p [serverport] <script filename>
+$ vim subjob.con
+<server's ip> <server's port>
 ```
-
+or
+```
+$./subjob -i [serverip] -p [serverport] [filename]
+```
