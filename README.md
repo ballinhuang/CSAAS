@@ -15,33 +15,13 @@ $ make all
 ```
 
 # Configure file need
-### server
+### server daemon 需要讀取的節點檔案
 ```
-$ vim server.con
-<server's ip> <server's port>
-
-$ vim scheduler.con
-<scheduler's ip> <scheduler's port>
-
 $ vim node.con
 <node1's ip> <node1's port> <node1's name> <node1's core>
 <node2's ip> <node2's port> <node2's name> <node2's core>
 ...
 
-```
-
-### scheduler
-```
-$ vim scheduler.con
-<scheduler's ip> <scheduler's port>
-```
-
-### mom
-```
-$ vim server.con
-<server's ip> <server's port>
-$ vim mom.con
-<mom's ip> <mom's port>
 ```
 
 ### subjob
@@ -54,21 +34,29 @@ or
 $./subjob -i <server's ip> -p <server's port> <filename>
 ```
 
-# Example
-(-command) --> optional
+# 開始使用
+
+### server daemon
 
 ```
 $ cd server
-$ ./server (-odebug)
-$ cd ..
-$ cd scheduler
-$ ./scheduler -mode FIFO (-odebug)
-$ cd ..
-$ cd mom
-$ ./mom (-odebug)
-$ cd ..
+$ ./server -i [serverip] -p [serverport] -si [schesulerip] -sp [schedulerport] (-odebug)
+```
 
+### scheduler daemon
+```
+$ cd scheduler
+$ ./scheduler -mode FIFO -i [schesulerip] -p [schedulerport] (-odebug)
+```
+
+### mom daemon (計算節點都要啟動這個)
+```
+$ cd mom
+$ ./mom -i [momip] -p [momport] (-odebug)
+```
+### subjob (提交工作)
+```
 $ cd subjob
-$ ./subjob <your script filename>
+$ ./subjob -i [serverip] -p [serverport] <script filename>
 ```
 
